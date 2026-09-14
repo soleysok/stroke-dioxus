@@ -47,6 +47,12 @@ pub fn StrokePad(
         div { class: "pad-stack",
             div {
                 class: "pad",
+                // Nothing here works without a pointer, and no amount of ARIA
+                // changes that. Saying what it is at least lets a screen reader
+                // user recognise it and move on to the search field; the page
+                // points them there.
+                role: "img",
+                aria_label: "Writing pad. Needs a finger, stylus or mouse.",
                 // Without this the browser reads a stroke as a pan and scrolls
                 // the page out from under the writing.
                 style: "touch-action: none",

@@ -69,6 +69,10 @@ pub fn Draw() -> Element {
                     "order helps, but getting it wrong only costs you a place or two in "
                     "the list."
                 }
+                p { class: "sr-only",
+                    "Writing needs a pointing device. To look a character up from the "
+                    "keyboard, use the search field on the home page instead."
+                }
             }
 
             div { class: "draw",
@@ -76,7 +80,12 @@ pub fn Draw() -> Element {
 
                 // Dimmed rather than emptied while the next match runs: the
                 // candidates below are a beat out of date, not gone.
-                div { class: "draw-results", "data-settling": settling().to_string(),
+                div {
+                    class: "draw-results",
+                    "data-settling": settling().to_string(),
+                    // Candidates arrive without anything being focused, so they
+                    // have to announce themselves.
+                    aria_live: "polite",
                     if let Some(message) = failure() {
                         p { class: "draw-note", "{message}" }
                     } else if empty() {
