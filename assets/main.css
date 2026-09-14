@@ -1,0 +1,1056 @@
+/* Stroke Order — design tokens and base styles.
+ *
+ * Follows Apple's Human Interface Guidelines as closely as the web allows:
+ * the iOS type scale and system colours, 44px minimum hit targets, chrome that
+ * defers to content, and depth carried by translucency and hairlines rather
+ * than heavy borders. https://developer.apple.com/design/
+ *
+ * Cinnabar is the single accent. It is the colour of seal paste (印泥), so it
+ * belongs to the subject matter rather than being decoration.
+ */
+
+:root {
+  /* Apple's iOS text styles. Sizes are fixed in px because they are already a
+   * considered scale; rem would let a browser default distort the ratios. */
+  --text-large-title: 2.125rem; /* 34px */
+  --text-title-1: 1.75rem; /* 28px */
+  --text-title-2: 1.375rem; /* 22px */
+  --text-title-3: 1.25rem; /* 20px */
+  --text-headline: 1.0625rem; /* 17px, semibold */
+  --text-body: 1.0625rem; /* 17px */
+  --text-callout: 1rem; /* 16px */
+  --text-subhead: 0.9375rem; /* 15px */
+  --text-footnote: 0.8125rem; /* 13px */
+  --text-caption: 0.75rem; /* 12px */
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-normal: 1.45;
+
+  --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable",
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  /* Glyphs render in a Song/Ming serif: it is the typeface Chinese dictionaries
+   * use, and its modulated strokes make stroke order legible. */
+  --font-han: "Songti SC", "Song", STSong, "Noto Serif CJK SC", "Source Han Serif SC",
+    "Noto Serif SC", SimSun, serif;
+
+  --radius-sm: 0.625rem; /* 10px */
+  --radius-md: 0.875rem; /* 14px */
+  --radius-lg: 1.25rem; /* 20px */
+  --radius-xl: 1.75rem; /* 28px */
+  --radius-pill: 999px;
+
+  /* 44px is Apple's minimum comfortable hit target. */
+  --tap: 2.75rem;
+
+  --page: 48rem;
+  --gutter: 1rem;
+
+  --ease: cubic-bezier(0.32, 0.72, 0, 1); /* iOS-like: quick out, soft settle */
+  --duration: 260ms;
+  --duration-fast: 140ms;
+
+  color-scheme: light dark;
+}
+
+/* Light appearance — Apple system colours. */
+:root {
+  --bg: #f2f2f7; /* systemGroupedBackground */
+  --surface: #ffffff;
+  --surface-sunken: #ececef;
+  --chrome: rgba(249, 249, 251, 0.82);
+
+  --label: #1c1c1e;
+  --label-2: rgba(60, 60, 67, 0.6); /* secondaryLabel */
+  --label-3: rgba(60, 60, 67, 0.32); /* tertiaryLabel */
+
+  --separator: rgba(60, 60, 67, 0.16);
+  --separator-strong: rgba(60, 60, 67, 0.29);
+  --fill: rgba(120, 120, 128, 0.12); /* secondarySystemFill */
+  --fill-strong: rgba(120, 120, 128, 0.2);
+
+  --accent: #c8352b; /* cinnabar */
+  --accent-quiet: rgba(200, 53, 43, 0.1);
+  --on-accent: #ffffff;
+
+  --ink: #1c1c1e; /* the glyph itself */
+  --ink-ghost: rgba(60, 60, 67, 0.14); /* un-drawn stroke outline */
+  --grid: rgba(60, 60, 67, 0.2); /* 米字格 guides */
+
+  --shadow-1: 0 0.5px 0 rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-2: 0 0.5px 0 rgba(0, 0, 0, 0.05), 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --surface: #1c1c1e;
+    --surface-sunken: #2c2c2e;
+    --chrome: rgba(24, 24, 26, 0.76);
+
+    --label: #ffffff;
+    --label-2: rgba(235, 235, 245, 0.6);
+    --label-3: rgba(235, 235, 245, 0.3);
+
+    --separator: rgba(84, 84, 88, 0.5);
+    --separator-strong: rgba(84, 84, 88, 0.8);
+    --fill: rgba(120, 120, 128, 0.24);
+    --fill-strong: rgba(120, 120, 128, 0.36);
+
+    --accent: #ff6a5e;
+    --accent-quiet: rgba(255, 106, 94, 0.16);
+    --on-accent: #2a0b08;
+
+    --ink: #f5f5f7;
+    --ink-ghost: rgba(235, 235, 245, 0.16);
+    --grid: rgba(235, 235, 245, 0.22);
+
+    --shadow-1: none;
+    --shadow-2: 0 8px 28px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* ── Reset ─────────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Chrome should not feel like selectable web copy; content still does. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--label);
+  font-family: var(--font-ui);
+  font-size: var(--text-body);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis-weight: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+svg {
+  display: block;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Type ──────────────────────────────────────────────────────────────── */
+
+h1,
+h2,
+h3 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--text-large-title);
+}
+h2 {
+  font-size: var(--text-title-2);
+}
+h3 {
+  font-size: var(--text-headline);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+.han {
+  font-family: var(--font-han);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.pinyin {
+  font-variant-ligatures: none;
+  letter-spacing: 0.01em;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Layout ────────────────────────────────────────────────────────────── */
+
+.app {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+}
+
+.page {
+  width: 100%;
+  max-width: var(--page);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  /* Clear the mobile tab bar; it is fixed to the bottom of the viewport. */
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  flex: 1;
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --gutter: 1.5rem;
+  }
+  .page {
+    padding-bottom: 4rem;
+  }
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 1.75rem;
+}
+
+.section-head h2 {
+  font-size: var(--text-title-3);
+}
+
+.section-note {
+  color: var(--label-2);
+  font-size: var(--text-subhead);
+}
+
+.lede {
+  color: var(--label-2);
+  font-size: var(--text-callout);
+  max-width: 34rem;
+}
+
+/* ── Navigation ────────────────────────────────────────────────────────── */
+
+/* Deference: the bar is translucent so content reads through it. */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--chrome);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 0.5px solid var(--separator);
+  padding-top: env(safe-area-inset-top);
+}
+
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: var(--page);
+  margin-inline: auto;
+  padding: 0.5rem var(--gutter);
+  min-height: var(--tap);
+}
+
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--tap);
+  flex-shrink: 0;
+}
+
+.wordmark-seal {
+  display: grid;
+  place-items: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: 0.5rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-han);
+  font-size: 1.125rem;
+  line-height: 1;
+  padding-bottom: 0.0625rem;
+}
+
+.wordmark-text {
+  font-size: var(--text-headline);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+/* Wide viewports get the sections in the top bar; narrow ones use a tab bar. */
+.topbar-links {
+  display: none;
+  gap: 0.25rem;
+  margin-inline-start: auto;
+}
+
+@media (min-width: 48rem) {
+  .topbar-links {
+    display: flex;
+  }
+}
+
+.topbar-link {
+  display: grid;
+  place-items: center;
+  min-height: var(--tap);
+  padding-inline: 0.875rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-subhead);
+  font-weight: 500;
+  color: var(--label-2);
+  transition: background var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
+}
+
+.topbar-link:hover {
+  background: var(--fill);
+  color: var(--label);
+}
+
+.topbar-link[aria-current="page"] {
+  color: var(--accent);
+  background: var(--accent-quiet);
+}
+
+/* iOS-style bottom tab bar, phones only. */
+.tabbar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  background: var(--chrome);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-top: 0.5px solid var(--separator);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (min-width: 48rem) {
+  .tabbar {
+    display: none;
+  }
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1875rem;
+  min-height: 3.25rem;
+  padding: 0.375rem 0.25rem;
+  color: var(--label-2);
+  font-size: var(--text-caption);
+  font-weight: 500;
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.tab[aria-current="page"] {
+  color: var(--accent);
+}
+
+.tab svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* ── Controls ──────────────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4375rem;
+  min-height: var(--tap);
+  padding-inline: 1.125rem;
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+  color: var(--label);
+  font-size: var(--text-subhead);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  transition: background var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease),
+    opacity var(--duration-fast) var(--ease);
+}
+
+.btn:hover {
+  background: var(--fill-strong);
+}
+
+/* Press feedback, the iOS way. */
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.btn-accent:hover {
+  background: var(--accent);
+  filter: brightness(1.06);
+}
+
+.btn-icon {
+  min-width: var(--tap);
+  padding-inline: 0;
+}
+
+.btn svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* iOS segmented control. */
+.segmented {
+  display: inline-flex;
+  padding: 0.125rem;
+  gap: 0.125rem;
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+}
+
+.segment {
+  min-height: 2.25rem;
+  padding-inline: 0.875rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-footnote);
+  font-weight: 600;
+  color: var(--label-2);
+  transition: background var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
+}
+
+.segment[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--label);
+  box-shadow: var(--shadow-1);
+}
+
+/* ── Search ────────────────────────────────────────────────────────────── */
+
+.searchfield {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tap);
+  padding-inline: 0.875rem;
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+  color: var(--label-2);
+  transition: background var(--duration-fast) var(--ease);
+}
+
+.searchfield:focus-within {
+  background: var(--surface);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.searchfield svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+}
+
+.searchfield input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  color: var(--label);
+  font-size: var(--text-callout);
+}
+
+.searchfield input::placeholder {
+  color: var(--label-3);
+}
+
+.searchfield-clear {
+  display: grid;
+  place-items: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: var(--radius-pill);
+  background: var(--fill-strong);
+  color: var(--surface);
+  flex-shrink: 0;
+}
+
+.searchfield-clear svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* ── Cards and surfaces ────────────────────────────────────────────────── */
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+
+.card-pad {
+  padding: 1.125rem;
+}
+
+/* Grid of character tiles — the primary browse affordance. */
+.char-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.char-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  padding: 0.625rem 0.25rem 0.5rem;
+  min-height: 5.25rem;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  transition: transform var(--duration-fast) var(--ease), background var(--duration-fast) var(--ease);
+}
+
+.char-tile:active {
+  transform: scale(0.96);
+}
+
+.char-tile-glyph {
+  font-family: var(--font-han);
+  font-size: 2.125rem;
+  line-height: 1.05;
+  color: var(--ink);
+}
+
+.char-tile-pinyin {
+  font-size: var(--text-caption);
+  color: var(--label-2);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Search results and list rows. */
+.rows {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.6875rem 1rem;
+  min-height: 4rem;
+  transition: background var(--duration-fast) var(--ease);
+}
+
+.row + .row {
+  /* Hairline inset to the text column, as in iOS tables. */
+  box-shadow: inset 0 0.5px 0 var(--separator);
+}
+
+.row:active {
+  background: var(--fill);
+}
+
+.row-glyph {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  font-family: var(--font-han);
+  font-size: 1.875rem;
+  color: var(--ink);
+}
+
+.row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.row-pinyin {
+  font-size: var(--text-callout);
+  font-weight: 600;
+  color: var(--label);
+}
+
+.row-gloss {
+  font-size: var(--text-footnote);
+  color: var(--label-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-chevron {
+  color: var(--label-3);
+  flex-shrink: 0;
+}
+
+.row-chevron svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* ── Badges ────────────────────────────────────────────────────────────── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+  color: var(--label-2);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-accent {
+  background: var(--accent-quiet);
+  color: var(--accent);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+/* ── Character detail ──────────────────────────────────────────────────── */
+
+.detail {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 56rem) {
+  .detail {
+    grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.detail-headline {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.detail-pinyin {
+  font-size: var(--text-title-1);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.detail-glyph {
+  font-family: var(--font-han);
+  font-size: 3.5rem;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.senses {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  counter-reset: sense;
+}
+
+.sense {
+  display: flex;
+  gap: 0.625rem;
+  font-size: var(--text-callout);
+}
+
+.sense::before {
+  counter-increment: sense;
+  content: counter(sense);
+  flex-shrink: 0;
+  width: 1.25rem;
+  color: var(--label-3);
+  font-size: var(--text-footnote);
+  font-variant-numeric: tabular-nums;
+  padding-top: 0.125rem;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.75rem;
+}
+
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.fact-label {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--label-3);
+}
+
+.fact-value {
+  font-size: var(--text-callout);
+  color: var(--label);
+}
+
+.fact-value .han {
+  font-size: var(--text-title-3);
+}
+
+/* ── Stroke player ─────────────────────────────────────────────────────── */
+
+.player {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.canvas {
+  position: relative;
+  aspect-ratio: 1;
+  width: 100%;
+  max-width: 20rem;
+  margin-inline: auto;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+
+.canvas > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.canvas-note {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+}
+
+.player-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+}
+
+.player-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+}
+
+/* Scrubber: one dot per stroke, tappable. */
+.player-dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.player-dot {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+}
+
+.player-dot::after {
+  content: "";
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: var(--radius-pill);
+  background: var(--fill-strong);
+  transition: background var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease);
+}
+
+.player-dot[data-state="done"]::after {
+  background: var(--label-3);
+}
+
+.player-dot[data-state="active"]::after {
+  background: var(--accent);
+  transform: scale(1.5);
+}
+
+/* Static stroke-order filmstrip. */
+.filmstrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(3.75rem, 1fr));
+  gap: 0.375rem;
+}
+
+.frame {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+
+.frame > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.frame-index {
+  position: absolute;
+  right: 0.1875rem;
+  bottom: 0.0625rem;
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--label-3);
+}
+
+/* ── Empty and placeholder states ──────────────────────────────────────── */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--label-2);
+}
+
+.empty-glyph {
+  font-family: var(--font-han);
+  font-size: 2.5rem;
+  color: var(--label-3);
+}
+
+.empty h3 {
+  color: var(--label);
+}
+
+.empty p {
+  font-size: var(--text-subhead);
+  max-width: 22rem;
+}
+
+/* Roadmap list used by the HSK and My Lists placeholders. */
+.roadmap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.roadmap-item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.roadmap-marker {
+  display: grid;
+  place-items: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  flex-shrink: 0;
+  margin-top: 0.0625rem;
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+  color: var(--label-2);
+}
+
+.roadmap-marker svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.roadmap-marker[data-done="true"] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.roadmap-title {
+  font-size: var(--text-callout);
+  font-weight: 600;
+}
+
+.roadmap-detail {
+  font-size: var(--text-footnote);
+  color: var(--label-2);
+}
+
+/* HSK level list. */
+.levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.625rem;
+}
+
+.level {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  transition: transform var(--duration-fast) var(--ease);
+}
+
+.level:active {
+  transform: scale(0.98);
+}
+
+.level-name {
+  font-size: var(--text-headline);
+  font-weight: 600;
+}
+
+.level-count {
+  font-size: var(--text-footnote);
+  color: var(--label-2);
+}
+
+/* ── Footer ────────────────────────────────────────────────────────────── */
+
+.footer {
+  max-width: var(--page);
+  margin-inline: auto;
+  padding: 2rem var(--gutter) 1rem;
+  color: var(--label-3);
+  font-size: var(--text-caption);
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.footer a {
+  color: var(--label-2);
+  text-decoration: underline;
+  text-decoration-color: var(--separator-strong);
+  text-underline-offset: 0.15em;
+}
+
+/* Visually hidden but available to assistive technology. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

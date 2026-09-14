@@ -2658,9 +2658,11 @@ dependencies = [
  "dioxus",
  "gloo-net",
  "gloo-timers",
+ "js-sys",
  "percent-encoding",
  "serde",
  "serde_json",
+ "wasm-bindgen",
  "web-sys",
 ]
 
