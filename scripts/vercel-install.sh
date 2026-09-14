@@ -81,10 +81,12 @@ else
   url="https://github.com/DioxusLabs/dioxus/releases/download/v${DX_VERSION}/${tarball}"
 
   log "Trying the prebuilt dx ${DX_VERSION}"
-  if curl -fsSL "${url}" | tar xz -C "${DX_HOME}/bin" && dx_works; then
+  if command -v tar >/dev/null &&
+    curl -fsSL "${url}" | tar xz -C "${DX_HOME}/bin" && dx_works; then
     echo "Prebuilt dx runs on this image."
   else
-    echo "Prebuilt dx will not run here; building it from source instead."
+    echo "No usable prebuilt dx here — it wants tar and glibc 2.39."
+    echo "Building it from source instead."
     rm -f "${DX_HOME}/bin/dx"
     install_build_deps
 

@@ -80,13 +80,16 @@ directory — the one place in a build container that is reliably writable.
 Then it needs `dx`, which is not optional, since it is the linker that resolves
 `asset!()`. The prebuilt release binary is built against glibc 2.39 and Amazon Linux 2023
 has 2.34, so on Vercel it will not run: the script downloads it, asks it for its version,
-and only believes the answer. When that fails it falls back to `cargo install
-dioxus-cli`, which costs about 17 minutes of CPU — call it ten on a two-core Basic build
-machine, against Vercel's 45-minute limit.
+and only believes the answer. When that fails it compiles `dioxus-cli` instead, which
+also wants `gcc`, `pkgconf` and `openssl-devel` — none of which a bare Amazon Linux image
+has, so they go in with `dnf` first. On that image the compile measures 5m30s across four
+cores, or 17 CPU-minutes: roughly ten minutes on the two-core Basic build machine,
+against Vercel's 45-minute limit.
 
 To avoid paying that on every deploy, the compiled binary is parked in
 `node_modules/.cache`, the only directory Vercel restores between builds. A warm build
-skips to the app itself, which is about a minute.
+reinstalls the toolchain, reuses the binary, and spends under a minute on the app itself
+— call it two minutes end to end.
 
 [`scripts/vercel-build.sh`](scripts/vercel-build.sh) then runs the release build and
 copies `target/dx/stroke/release/web/public` to `dist/`, so the Output Directory setting
