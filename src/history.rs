@@ -35,6 +35,8 @@ pub fn provide_entry() {
     use_context_provider(|| AtEntry(length()));
 }
 
+/// The reading [`provide_entry`] took, for a route that wants to know how it was
+/// arrived at.
 pub fn use_entry() -> AtEntry {
     use_context()
 }

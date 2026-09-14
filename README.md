@@ -236,9 +236,10 @@ a 450 ms pause that keeps the matching from interrupting somebody mid-character.
 - **Home** — search plus the most common characters as an immediate way in, and your
   recently viewed.
 - **Draw** (`/draw`) — write a character on a 米字格 with a finger or a stylus and get the
-  characters it looks like, as tiles that lead to the usual character page. Undo and
-  clear; matching runs once you pause. Offered beside the search field as well as in the
-  tab bar, because that is where somebody discovers they cannot type what they are
+  characters it looks like, as tiles that lead to the usual character page. Undo, and a
+  tinted Clear for starting over; matching runs once you pause. The pad comes back empty
+  from a character, ready for the next one. Offered beside the search field as well as in
+  the tab bar, because that is where somebody discovers they cannot type what they are
   looking at.
 - **Search** (`/search?q=`) — three tiers, tried in order so a typed character never gets
   buried: any Han characters in the query (which makes pasting a sentence useful), then
@@ -248,7 +249,11 @@ a 450 ms pause that keeps the matching from interrupting somebody mid-character.
   per-stroke stepping, a tappable per-stroke scrubber, 0.5×–2× speed and looping; a
   static stroke-order filmstrip; numbered senses; radical, stroke count and decomposition;
   other characters sharing the radical; Mandarin pronunciation via the browser's speech
-  synthesiser; and save-to-list.
+  synthesiser; and save-to-list. Back leads where you came from and says so: **Draw** for
+  a character the pad opened, which the pad notes per tab in `sessionStorage` because the
+  URL is deliberately the same however it was reached; **Back** for anywhere else in the
+  app; and **Browse** for a shared link opened cold, since `can_go_back` is always true on
+  the web and would otherwise walk out of the app.
 - **HSK** (`/hsk`, `/hsk/:band`) — all seven bands with character counts, browsable down
   to the characters each band introduces.
 - **My Lists** (`/lists`) — saved and recently viewed characters, in `localStorage`.
@@ -333,7 +338,9 @@ src/
   data.rs                     search index, per-character fetch, the search tiers
   index.rs                    the index, loaded once and shared through context
   recognize.rs                handwriting lookup: normalising, resampling, matching
-  storage.rs                  saved and recent, in localStorage
+  storage.rs                  saved and recent in localStorage; where a character was
+                              opened from, in sessionStorage
+  history.rs                  how long the session history was when the document loaded
   speech.rs                   Mandarin playback via speechSynthesis
   url.rs                      percent-encoding for routes carrying Han characters
   components/
