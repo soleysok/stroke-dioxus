@@ -498,6 +498,19 @@ p {
   filter: brightness(1.06);
 }
 
+/* Accent-tinted rather than filled: iOS's middle weight, for the one button in a
+ * row that should be found first without shouting. */
+.btn-tinted {
+  background: var(--accent-quiet);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.btn-tinted:hover {
+  background: var(--accent-quiet);
+  filter: brightness(1.06);
+}
+
 .btn-icon {
   min-width: var(--tap);
   padding-inline: 0;
