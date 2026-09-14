@@ -145,6 +145,15 @@ pub fn Chevron() -> Element {
     }
 }
 
+/// The back chevron. Lighter than the disclosure one, the way iOS draws it in a
+/// navigation bar.
+#[component]
+pub fn ChevronBack() -> Element {
+    rsx! {
+        Line { weight: 2.0, path { d: "M15 5l-7 7 7 7" } }
+    }
+}
+
 #[component]
 pub fn Check() -> Element {
     rsx! {
