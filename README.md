@@ -51,6 +51,83 @@ fetched once.
 
 ---
 
+## Deploying
+
+The release output is a plain static directory, so any static host will do. Vercel is
+what's configured here, deployed from a `git push`.
+
+`vercel.json` carries the whole setup, so a new Vercel project needs nothing in the
+dashboard beyond pointing it at this repository:
+
+| Setting | Value | Comes from |
+| --- | --- | --- |
+| Framework Preset | Other | `"framework": null` |
+| Install Command | `bash scripts/vercel-install.sh` | `"installCommand"` |
+| Build Command | `bash scripts/vercel-build.sh` | `"buildCommand"` |
+| Output Directory | `dist` | `"outputDirectory"` |
+| Root Directory | repository root | — |
+
+Nothing in the build is JavaScript, so the project's Node.js version setting is
+irrelevant. Leave the dashboard Override toggles off and the values above apply.
+
+### What the build does
+
+Vercel's build image is Amazon Linux 2023 with no Rust in it, so
+[`scripts/vercel-install.sh`](scripts/vercel-install.sh) installs the toolchain itself:
+rustup, Rust 1.90, and the `wasm32-unknown-unknown` target, all inside the project
+directory — the one place in a build container that is reliably writable.
+
+Then it needs `dx`, which is not optional, since it is the linker that resolves
+`asset!()`. The prebuilt release binary is built against glibc 2.39 and Amazon Linux 2023
+has 2.34, so on Vercel it will not run: the script downloads it, asks it for its version,
+and only believes the answer. When that fails it compiles `dioxus-cli` instead, which
+also wants `gcc`, `pkgconf` and `openssl-devel` — none of which a bare Amazon Linux image
+has, so they go in with `dnf` first. On that image the compile measures 5m30s across four
+cores, or 17 CPU-minutes: roughly ten minutes on the two-core Basic build machine,
+against Vercel's 45-minute limit.
+
+To avoid paying that on every deploy, the compiled binary is parked in
+`node_modules/.cache`, the only directory Vercel restores between builds. A warm build
+reinstalls the toolchain, reuses the binary, and spends under a minute on the app itself
+— call it two minutes end to end.
+
+[`scripts/vercel-build.sh`](scripts/vercel-build.sh) then runs the release build and
+copies `target/dx/stroke/release/web/public` to `dist/`, so the Output Directory setting
+does not have to track `dx`'s layout across CLI versions. It fails loudly if the wasm or
+the search index is missing, which is the difference between a failed deploy and a blank
+page in production.
+
+Both scripts read their versions and paths from
+[`scripts/vercel-env.sh`](scripts/vercel-env.sh) and run anywhere, not just on Vercel:
+
+```bash
+bash scripts/vercel-install.sh && bash scripts/vercel-build.sh
+```
+
+### Routing
+
+Client-side routes like `/character/%E5%A5%BD` have no file on disk, so anything that is
+not a real file is rewritten to `index.html`. Vercel checks the filesystem before
+rewrites, so the hashed assets still serve themselves.
+
+`/assets/` and `/data/` are excluded from that fallback on purpose. A character with no
+vendored file has to come back as a 404 so the runtime fallback to the jsDelivr mirror
+takes over; rewriting it would return 200 with a page of HTML that fails to parse as
+JSON. Hashed assets are cached for a year as immutable, the generated data for an hour
+with a week of stale-while-revalidate.
+
+### If the Vercel build stops working
+
+[`.github/workflows/deploy-vercel.yml`](.github/workflows/deploy-vercel.yml) is the
+escape hatch, and is manual-dispatch only so it never fires on its own. GitHub's runners
+can use the prebuilt `dx`, so it builds in a few minutes, then deploys through `vercel
+build && vercel deploy --prebuilt` — reading the same `vercel.json`, so the two paths
+cannot drift. It needs `VERCEL_TOKEN`, `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` as
+repository secrets, and the Vercel project's Git integration turned off, or every push
+would build twice.
+
+---
+
 ## Data
 
 Everything under `public/data/` is generated. To rebuild it:
@@ -192,14 +269,6 @@ distance against the median, in the 1024 grid), handwriting input via HanziLooku
 OCR through Tesseract, a printable practice worksheet, pinyin and radical browse indexes,
 and a parallel Khmer script section.
 
-### Deployment
-
-Not wired up yet. Vercel can serve the release output as a static site, but it needs a
-`vercel.json` that (a) runs the Rust/wasm toolchain in the build step or uploads a
-prebuilt directory, and (b) rewrites unknown paths to `index.html`, since client-side
-routes like `/character/%E5%A5%BD` have no file on disk. Locally `dx serve` handles that
-via `index_on_404`. This is a follow-up.
-
 ---
 
 ## Layout
@@ -222,6 +291,8 @@ src/
 assets/main.css               design tokens and base styles
 public/data/                  generated; see Data above
 scripts/build-data.py         the generator
+scripts/vercel-*.sh           the deploy: toolchain, build, shared paths
+vercel.json                   Vercel settings, SPA rewrite, cache headers
 ```
 
 ## Licence

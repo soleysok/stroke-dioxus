@@ -1,0 +1,8 @@
+# Build products and toolchains, which the Vercel build makes for itself. Only
+# matters when deploying from a working tree with `vercel deploy`; Git
+# deployments never see them.
+/target
+/dist
+/.rust
+/node_modules
+/scripts/.cache
