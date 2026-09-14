@@ -5,8 +5,9 @@ WebAssembly) rewrite of the production app at
 [stroke-mssl.vercel.app](https://stroke-mssl.vercel.app), built in parallel and
 independently.
 
-Look up any of 9,574 characters by character, pinyin, or English meaning, then watch it
-written one stroke at a time in the order a native writer would use.
+Look up any of 9,574 characters by character, pinyin, or English meaning — or draw one
+you cannot type — then watch it written one stroke at a time in the order a native
+writer would use.
 
 > The React/TanStack app in `soleysok/mssl-strok` stays in production and is untouched.
 > This repository is the parallel rebuild; it was read only as a feature and data
@@ -46,8 +47,18 @@ cargo check --target wasm32-unknown-unknown
 Note that a cargo-only **build** will panic at runtime on any `asset!()`, because `dx`
 acts as the linker that resolves asset hashes. Use cargo to check, `dx` to run.
 
-Current release payload: **787 KB of wasm (297 KB gzipped)** plus a 518 KB search index,
-fetched once.
+The handwriting matcher is the one part with no browser in it, so it has tests that run on
+the host. They read the generated `public/data/strokes.bin` rather than a fixture, because
+what they are really guarding is that the generator and the matcher still agree:
+
+```bash
+cargo test
+```
+
+Current release payload: **893 KB of wasm (265 KB brotli, which is what Vercel serves)**
+plus a 518 KB search index, both fetched once. The Draw pad's 352 KB of handwriting
+templates are fetched the first time somebody opens it, and not before — the pad's share
+of the wasm is 16 KB brotli.
 
 ---
 
@@ -142,6 +153,7 @@ The script downloads its sources into `scripts/.cache/` (reused on later runs) a
 | --- | --- |
 | `public/data/index.json` | 518 KB columnar search index over all 9,574 characters — reading, toneless pinyin keys, short gloss, stroke count, HSK band, radical. |
 | `public/data/char/<hex>.json` | Per character: stroke outlines, stroke medians, and the full dictionary entry. Named by zero-padded Unicode code point so filenames stay ASCII. |
+| `public/data/strokes.bin` | 352 KB of handwriting templates for the Draw pad: the same medians, normalised and resampled. Fetched only when somebody opens the pad. |
 
 Sources are [Make Me a Hanzi](https://github.com/skishore/makemeahanzi) for graphics and
 definitions, and
@@ -183,12 +195,51 @@ Playback runs off a 16 ms clock that advances by measured wall-clock deltas rath
 fixed step, so a dropped frame does not slow the animation down. Per-stroke duration
 scales with median length, so long strokes take longer to draw than short ones.
 
+### How handwriting lookup works
+
+The React app hands drawn strokes to HanziLookup, a JavaScript library, with an 808 KB
+data file beside it. There is no Rust port, so
+[`src/recognize.rs`](src/recognize.rs) matches strokes against the same medians the
+animation is drawn along.
+
+`scripts/build-data.py` emits `public/data/strokes.bin`: every vendored character's
+medians, **normalised** and **resampled**. Normalising scales all of a character's points
+by the longer side of their bounding box and centres them, so absolute size and position
+drop out but proportion survives — 一 still spreads across one line and 目 still stands in
+a narrow column. Resampling then reduces each stroke to six evenly spaced points, which is
+what makes a median's handful of samples comparable to the few hundred points a finger
+drags out. Quantised to a byte per coordinate, that is 352 KB for 2,970 characters, and it
+is fetched only when somebody opens the pad.
+
+A drawing is put through the same two steps, so the comparison is like for like — which is
+why the normalisation in the generator and the one in `recognize.rs` are best read as two
+halves of one algorithm. Two strokes are then scored by the mean distance between their
+resampled points, which is sensitive to the direction a stroke was drawn in; 横 written
+right to left is not the same stroke, though drawing it backwards is a common enough slip
+that the reverse is tried too, under a penalty.
+
+Whole characters are compared by aligning their stroke lists with a banded edit distance,
+so one stroke too many or too few costs a gap rather than shifting every stroke after it
+out of position — which matters, because miscounting strokes is exactly what a learner
+does. The stroke count still counts for something on its own: without a small penalty for
+disagreeing about it, a plain square box ranks 曰 above 口, since the calligraphic 口 in
+the data narrows towards its base and fits a drawn square *worse* than 曰's outer box
+does.
+
+A twelve-stroke drawing is matched against every plausible template in about 15 ms, after
+a 450 ms pause that keeps the matching from interrupting somebody mid-character.
+
 ---
 
 ## What's Built
 
 - **Home** — search plus the most common characters as an immediate way in, and your
   recently viewed.
+- **Draw** (`/draw`) — write a character on a 米字格 with a finger or a stylus and get the
+  characters it looks like, as tiles that lead to the usual character page. Undo and
+  clear; matching runs once you pause. Offered beside the search field as well as in the
+  tab bar, because that is where somebody discovers they cannot type what they are
+  looking at.
 - **Search** (`/search?q=`) — three tiers, tried in order so a typed character never gets
   buried: any Han characters in the query (which makes pasting a sentence useful), then
   toneless pinyin with exact syllables ahead of prefixes, then English gloss substring.
@@ -265,9 +316,12 @@ until accounts exist, at which point lists and progress become the thing worth s
 ### Also in the React app, not here
 
 Writing practice with stroke scoring (cosine similarity, start/end distance and Fréchet
-distance against the median, in the 1024 grid), handwriting input via HanziLookup, photo
-OCR through Tesseract, a printable practice worksheet, pinyin and radical browse indexes,
-and a parallel Khmer script section.
+distance against the median, in the 1024 grid), photo OCR through Tesseract, a printable
+practice worksheet, pinyin and radical browse indexes, and a parallel Khmer script
+section.
+
+Handwriting input has landed here — see Draw above — though the React app also offers its
+pad when adding words to a list, which this does not yet.
 
 ---
 
@@ -278,16 +332,18 @@ src/
   main.rs                     route table, app root
   data.rs                     search index, per-character fetch, the search tiers
   index.rs                    the index, loaded once and shared through context
+  recognize.rs                handwriting lookup: normalising, resampling, matching
   storage.rs                  saved and recent, in localStorage
   speech.rs                   Mandarin playback via speechSynthesis
   url.rs                      percent-encoding for routes carrying Han characters
   components/
     stroke_player.rs          the animation: timeline, transform, controls
+    stroke_pad.rs             the writing surface: ink, undo, clear
     shell.rs                  top bar, phone tab bar, footer, page furniture
     char_list.rs              character grid and search-result rows
     search_field.rs
     icons.rs
-  routes/                     home, search, character, hsk, lists, not_found
+  routes/                     home, draw, search, character, hsk, lists, not_found
 assets/main.css               design tokens and base styles
 public/data/                  generated; see Data above
 scripts/build-data.py         the generator

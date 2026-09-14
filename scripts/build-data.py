@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build Stroke Order's character data from Make Me a Hanzi + HSK 3.0 vocabulary.
 
-Outputs two things under `public/data/`:
+Outputs three things under `public/data/`:
 
   index.json        A columnar search index over every character. Parallel arrays
                     rather than a list of objects, because the browser parses this
@@ -11,6 +11,10 @@ Outputs two things under `public/data/`:
   char/<hex>.json   Per character: stroke outlines, stroke medians, and the full
                     dictionary entry. Named by zero-padded Unicode code point so
                     the filenames stay ASCII and need no URL escaping.
+
+  strokes.bin       Handwriting templates for the draw-to-look-up pad: every
+                    character's medians, normalised and resampled to a fixed
+                    number of points per stroke. See `recognition_record`.
 
 By default only the HSK-ranked characters get a per-character file — that is every
 character a learner meets in HSK 1 through 7-9, about 3k of the 9.5k total, and it
@@ -37,7 +41,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
+import struct
 import sys
 import unicodedata
 import urllib.request
@@ -59,6 +65,19 @@ SOURCES = {
 MAX_DEFINITION = 240
 # The search index carries a much shorter gloss, since it holds all 9.5k of them.
 MAX_GLOSS = 64
+
+# ── Handwriting templates ───────────────────────────────────────────────────
+# Points each stroke is resampled to. Six resolves the corner in a 横折 and the
+# hook on a 竖钩 while keeping the file to a third of a megabyte; eight measured no
+# better against distorted drawings and cost a quarter more. The matcher in
+# src/recognize.rs reads this from the header rather than assuming it, so it can
+# be retuned without a matching code change.
+RECOGNITION_POINTS = 6
+
+# "Stroke Order Stroke Recognition". A four-byte magic makes a truncated or
+# misrouted download fail loudly instead of being parsed as garbage.
+RECOGNITION_MAGIC = b"SOSR"
+RECOGNITION_VERSION = 1
 
 # ü is typed as "v" by every Chinese IME, so index it both ways.
 TONE_MAP = str.maketrans(
@@ -163,6 +182,109 @@ def hsk_bands(path: Path) -> tuple[dict[str, int], dict[str, int]]:
             if freq and (ch not in freqs or freq < freqs[ch]):
                 freqs[ch] = freq
     return bands, freqs
+
+
+def resample(points: list[tuple[float, float]], n: int) -> list[tuple[float, float]]:
+    """`n` points spaced evenly along a polyline's arc length, ends included.
+
+    Resampling by length rather than by index is what makes a stroke's shape
+    comparable no matter how many samples it was captured with — a median from
+    the data has a handful of points, a finger drags out hundreds.
+    """
+    if len(points) == 1:
+        return [points[0]] * n
+    lengths = [math.dist(points[i], points[i + 1]) for i in range(len(points) - 1)]
+    total = sum(lengths)
+    if total <= 0:
+        return [points[0]] * n
+
+    out: list[tuple[float, float]] = []
+    seg = 0
+    walked = 0.0
+    for k in range(n):
+        target = total * k / (n - 1)
+        while seg < len(lengths) - 1 and walked + lengths[seg] < target:
+            walked += lengths[seg]
+            seg += 1
+        span = lengths[seg]
+        t = 0.0 if span <= 0 else (target - walked) / span
+        (x0, y0), (x1, y1) = points[seg], points[seg + 1]
+        out.append((x0 + (x1 - x0) * t, y0 + (y1 - y0) * t))
+    return out
+
+
+def recognition_record(medians: list[list[list[float]]]) -> bytes | None:
+    """One character's handwriting template.
+
+    Medians are mapped into the unit square the same way the pad maps a finger
+    drawing: the whole character is scaled by its longer side, so absolute size
+    and position drop out but proportion survives. What stays is the shape and
+    order of the strokes, which is all the matcher compares.
+
+        u8                        stroke count
+        strokes × pts × u8 pair   x then y, each 0..255 across the unit square
+
+    Returns None for a character with no usable medians. This must stay in step
+    with `Drawing::normalize` in src/recognize.rs — the two halves of one
+    algorithm, one run here and one in the browser.
+    """
+    if not medians or len(medians) > 255:
+        return None
+
+    # Make Me a Hanzi's y axis points up and the app's points down. The flip has
+    # to happen before anything is measured; the offset does not, because
+    # centring on the bounding box removes it.
+    flipped = [[(float(x), -float(y)) for x, y in stroke] for stroke in medians]
+    points = [p for stroke in flipped for p in stroke]
+    if not points:
+        return None
+
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
+    min_x, max_x, min_y, max_y = min(xs), max(xs), min(ys), max(ys)
+    # A character with no extent at all — never seen in the data, but a stray
+    # single-point median would otherwise divide by zero.
+    side = max(max_x - min_x, max_y - min_y) or 1.0
+    centre_x, centre_y = (min_x + max_x) / 2, (min_y + max_y) / 2
+
+    def quantise(value: float) -> int:
+        return min(255, max(0, round(value * 255)))
+
+    out = bytearray()
+    out.append(len(medians))
+    for stroke in flipped:
+        if not stroke:
+            return None
+        unit = [
+            ((x - centre_x) / side + 0.5, (y - centre_y) / side + 0.5) for x, y in stroke
+        ]
+        for x, y in resample(unit, RECOGNITION_POINTS):
+            out.append(quantise(x))
+            out.append(quantise(y))
+    return bytes(out)
+
+
+def write_recognition(path: Path, graphics: dict[str, dict], order: list[str]) -> int:
+    """Emit the handwriting template file for `order`, in that order."""
+    glyphs: list[str] = []
+    records: list[bytes] = []
+    for ch in order:
+        record = recognition_record(graphics[ch]["medians"])
+        if record is not None:
+            glyphs.append(ch)
+            records.append(record)
+
+    header = bytearray(RECOGNITION_MAGIC)
+    header.append(RECOGNITION_VERSION)
+    header.append(RECOGNITION_POINTS)
+    header += struct.pack("<HI", 0, len(glyphs))
+    header += struct.pack(f"<{len(glyphs)}I", *(ord(c) for c in glyphs))
+
+    with path.open("wb") as f:
+        f.write(header)
+        for record in records:
+            f.write(record)
+    return len(glyphs)
 
 
 def build() -> int:
@@ -322,6 +444,16 @@ def build() -> int:
     log(
         f"Wrote {len(subset):,} files to {char_dir.relative_to(ROOT)}/ "
         f"({total:,} bytes, {total // max(len(subset), 1):,} avg)"
+    )
+
+    # Handwriting templates, for the same subset. Restricting them to what is
+    # vendored is deliberate: every character the pad can offer then has stroke
+    # data on the same origin, so tapping a candidate never depends on the CDN.
+    strokes_path = OUT / "strokes.bin"
+    written = write_recognition(strokes_path, graphics, subset)
+    log(
+        f"Wrote {strokes_path.relative_to(ROOT)} "
+        f"({written:,} templates, {strokes_path.stat().st_size:,} bytes)"
     )
     return 0
 

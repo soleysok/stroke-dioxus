@@ -117,6 +117,28 @@ pub fn Bookmark(#[props(default = false)] filled: bool) -> Element {
 }
 
 #[component]
+pub fn Undo() -> Element {
+    rsx! {
+        Line {
+            path { d: "M4 9h9.5a5 5 0 0 1 0 10H8" }
+            path { d: "M7.5 4.5 3 9l4.5 4.5" }
+        }
+    }
+}
+
+/// An eraser, tilted as if held.
+#[component]
+pub fn Erase() -> Element {
+    rsx! {
+        Line {
+            path { d: "M9.5 19.5 4 14a1.5 1.5 0 0 1 0-2.1l8-8a1.5 1.5 0 0 1 2.1 0l5.4 5.4a1.5 1.5 0 0 1 0 2.1l-6.6 6.6a1.5 1.5 0 0 1-1 .5z" }
+            path { d: "M8.5 8.5 15 15" }
+            path { d: "M9 19.5h11" }
+        }
+    }
+}
+
+#[component]
 pub fn Chevron() -> Element {
     rsx! {
         Line { weight: 2.25, path { d: "M9 5l7 7-7 7" } }
@@ -145,6 +167,17 @@ pub fn TabBrowse() -> Element {
         Line {
             rect { x: "3.5", y: "3.5", width: "17", height: "17", rx: "4.5" }
             path { d: "M12 3.5v17M3.5 12h17", stroke_dasharray: "2.5 3" }
+        }
+    }
+}
+
+/// A brush on the diagonal, over the stroke it has just laid down.
+#[component]
+pub fn TabDraw() -> Element {
+    rsx! {
+        Line {
+            path { d: "M20.5 3.5 10 14l-1.2 3.2 3.2-1.2L22.5 5.5z" }
+            path { d: "M7 14.5c-1.8.6-2.4 2-2.6 3.4-.1.9-.6 1.5-1.4 1.8 1.6 1.2 4.6 1.2 5.8-.6" }
         }
     }
 }
