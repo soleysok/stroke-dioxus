@@ -73,6 +73,7 @@ fn Detail(character: Character) -> Element {
 
     let reading = character.pinyin.join(" · ");
     let senses = character.senses();
+    let components = character.components();
 
     // Other characters built on the same radical, in frequency order. Restricted
     // to the ranked slice so the suggestions stay characters worth learning.
@@ -158,11 +159,21 @@ fn Detail(character: Character) -> Element {
                             span { class: "fact-label", "Strokes" }
                             span { class: "fact-value num", "{character.stroke_count()}" }
                         }
-                        if !character.decomposition.is_empty() {
+                        if !components.is_empty() {
                             div { class: "fact",
-                                span { class: "fact-label", "Composition" }
+                                span { class: "fact-label", "Built From" }
                                 span { class: "fact-value",
-                                    span { class: "han", "{character.decomposition}" }
+                                    for (i, part) in components.iter().enumerate() {
+                                        Fragment { key: "{i}",
+                                            if i > 0 {
+                                                span { class: "fact-join", aria_hidden: "true", "+" }
+                                            }
+                                            span { class: "han", "{part}" }
+                                        }
+                                    }
+                                }
+                                if let Some(arrangement) = character.arrangement() {
+                                    span { class: "fact-note", "{arrangement}" }
                                 }
                             }
                         }

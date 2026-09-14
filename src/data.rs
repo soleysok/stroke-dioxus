@@ -285,6 +285,27 @@ impl Character {
             .collect()
     }
 
+    /// The parts the character is built from, e.g. `['女', '子']` for 好.
+    ///
+    /// `decomposition` is an Ideographic Description Sequence: an arrangement
+    /// operator followed by its operands, as in `⿰女子`. The operators live in a
+    /// Unicode block (U+2FF0–U+2FFB) that most system fonts do not cover, so
+    /// rendering the sequence verbatim usually produces tofu. The parts are shown
+    /// on their own instead, with the arrangement spelled out in words by
+    /// [`Self::arrangement`] — which is easier to read than the notation anyway.
+    pub fn components(&self) -> Vec<char> {
+        self.decomposition
+            .chars()
+            .filter(|c| !is_ids_operator(*c) && *c != '?' && *c != '？')
+            .collect()
+    }
+
+    /// How the parts are arranged, in words. Taken from the outermost operator;
+    /// nested sequences describe only their top-level arrangement.
+    pub fn arrangement(&self) -> Option<&'static str> {
+        self.decomposition.chars().find_map(ids_arrangement)
+    }
+
     pub fn hsk_label(&self) -> Option<String> {
         match self.hsk {
             0 => None,
@@ -292,6 +313,28 @@ impl Character {
             band => Some(format!("HSK {band}")),
         }
     }
+}
+
+fn is_ids_operator(c: char) -> bool {
+    matches!(c, '\u{2FF0}'..='\u{2FFB}')
+}
+
+fn ids_arrangement(c: char) -> Option<&'static str> {
+    Some(match c {
+        '\u{2FF0}' => "Left to right",
+        '\u{2FF1}' => "Top to bottom",
+        '\u{2FF2}' => "Left to middle to right",
+        '\u{2FF3}' => "Top to middle to bottom",
+        '\u{2FF4}' => "Fully surrounded",
+        '\u{2FF5}' => "Surrounded from above",
+        '\u{2FF6}' => "Surrounded from below",
+        '\u{2FF7}' => "Surrounded from the left",
+        '\u{2FF8}' => "Surrounded from the upper left",
+        '\u{2FF9}' => "Surrounded from the upper right",
+        '\u{2FFA}' => "Surrounded from the lower left",
+        '\u{2FFB}' => "Overlaid",
+        _ => return None,
+    })
 }
 
 /// The vendored per-character file: metadata and graphics together.

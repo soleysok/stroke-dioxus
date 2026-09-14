@@ -541,6 +541,17 @@ p {
   color: var(--label-3);
 }
 
+/* `type="search"` earns the mobile keyboard's search key, but WebKit also draws
+ * its own magnifier and clear button, which would duplicate ours. */
+.searchfield input::-webkit-search-decoration,
+.searchfield input::-webkit-search-results-decoration,
+.searchfield input::-webkit-search-cancel-button,
+.searchfield input::-webkit-search-results-button {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
 .searchfield-clear {
   display: grid;
   place-items: center;
@@ -795,8 +806,26 @@ p {
   color: var(--label);
 }
 
+.fact-value {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
 .fact-value .han {
   font-size: var(--text-title-3);
+}
+
+.fact-join {
+  color: var(--label-2);
+  font-size: var(--text-subhead);
+  font-weight: 500;
+}
+
+.fact-note {
+  font-size: var(--text-caption);
+  color: var(--label-2);
 }
 
 /* ── Stroke player ─────────────────────────────────────────────────────── */
