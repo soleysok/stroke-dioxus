@@ -1,0 +1,9 @@
+# Holding a signal borrow across an await point makes every other read and write
+# fail for as long as the future is pending — a runtime panic, not a compile
+# error. This is the guard the official Dioxus template ships, and the animation
+# clock in stroke_player.rs is exactly the kind of code that would trip it.
+await-holding-invalid-types = [
+  { path = "generational_box::GenerationalRef", reason = "Reads must not be held across an await point; writes will fail while the await is pending." },
+  { path = "generational_box::GenerationalRefMut", reason = "Writes must not be held across an await point; reads and writes will fail while the await is pending." },
+  { path = "dioxus_signals::WriteLock", reason = "Writes must not be held across an await point; reads and writes will fail while the await is pending." },
+]

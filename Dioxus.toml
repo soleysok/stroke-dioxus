@@ -1,0 +1,20 @@
+[application]
+name = "stroke"
+asset_dir = "assets"
+
+# Files here are copied to the site root untouched, with no content hash in the
+# name. The character data is addressed by code point from Rust, so those URLs
+# have to stay predictable.
+public_dir = "public"
+
+[web.app]
+title = "Stroke Order"
+
+[web.watcher]
+watch_path = ["src", "assets"]
+# Client-side routes like /character/%E5%A5%BD have no file on disk, so the dev
+# server must fall back to index.html instead of 404ing.
+index_on_404 = true
+
+[web.wasm_opt]
+level = "z"

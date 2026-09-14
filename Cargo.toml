@@ -1,0 +1,46 @@
+[package]
+name = "stroke"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+description = "Stroke Order — learn Chinese characters stroke by stroke, built with Dioxus"
+license = "MIT"
+repository = "https://github.com/soleysok/stroke-dioxus"
+
+[dependencies]
+# Pinned to the 0.7 line. 0.7 changed essentially every API from 0.6, so do not
+# relax this to "0.x" — see docs/dioxus-notes.md.
+dioxus = { version = "=0.7.10", features = ["router"] }
+
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+
+# Browser APIs: fetch for the character data, localStorage for saved/recent.
+gloo-net = { version = "0.6.0", default-features = false, features = ["http", "json"] }
+gloo-timers = { version = "0.3.0", features = ["futures"] }
+wasm-bindgen = "0.2.100"
+js-sys = "0.3.77"
+web-sys = { version = "0.3.77", features = [
+  "Window",
+  "Performance",
+  "Storage",
+  "SpeechSynthesis",
+  "SpeechSynthesisUtterance",
+  "SpeechSynthesisVoice",
+] }
+
+# Character routes carry the literal hanzi, which must survive a round trip
+# through the address bar.
+percent-encoding = "2.3.2"
+
+[features]
+default = ["web"]
+web = ["dioxus/web"]
+
+# WASM payload is downloaded before anything renders, so optimise for size.
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
