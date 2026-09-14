@@ -33,9 +33,10 @@ rm -rf dist
 mkdir -p dist
 cp -R "${site}/." dist/
 
-# A missing wasm file or a missing search index still produces a directory that
-# looks plausible, and the failure only shows up as a blank page in production.
-for required in dist/index.html dist/data/index.json; do
+# A missing wasm file, search index or handwriting template file still produces a
+# directory that looks plausible, and the failure only shows up in production as
+# a blank page or a pad that recognises nothing.
+for required in dist/index.html dist/data/index.json dist/data/strokes.bin; do
   [ -f "${required}" ] || { echo "Missing ${required} in the build output." >&2; exit 1; }
 done
 if ! find dist -name '*.wasm' -print -quit | grep -q .; then
