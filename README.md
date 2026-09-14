@@ -9,9 +9,14 @@ Look up any of 9,574 characters by character, pinyin, or English meaning — or 
 you cannot type — then watch it written one stroke at a time in the order a native
 writer would use.
 
+The HSK 3.0 syllabus is here as a course as well as a tag on each character: 5,369 words
+split into 512 short themed units, and one tap on a unit turns the lesson into a saved
+vocabulary list.
+
 > The React/TanStack app in `soleysok/mssl-strok` stays in production and is untouched.
-> This repository is the parallel rebuild; it was read only as a feature and data
-> reference.
+> This repository is the parallel rebuild; it is read as a feature reference, and its
+> committed HSK course files are copied here rather than reinvented — see
+> [`NOTICE`](NOTICE) and the Data section.
 
 ---
 
@@ -55,10 +60,11 @@ what they are really guarding is that the generator and the matcher still agree:
 cargo test
 ```
 
-Current release payload: **893 KB of wasm (265 KB brotli, which is what Vercel serves)**
-plus a 518 KB search index, both fetched once. The Draw pad's 352 KB of handwriting
-templates are fetched the first time somebody opens it, and not before — the pad's share
-of the wasm is 16 KB brotli.
+Current release payload: **1,080 KB of wasm (314 KB brotli, which is what Vercel serves)**
+plus a 518 KB search index (137 KB brotli), both fetched once. Everything else is fetched
+only when somebody asks for it: the Draw pad's 352 KB of handwriting templates the first
+time the pad is opened, and one HSK level's units — 48 KB for HSK 1 up to 107 KB for HSK 6,
+13 to 31 KB brotli — the first time that level is opened, then kept for the session.
 
 ---
 
@@ -104,9 +110,10 @@ reinstalls the toolchain, reuses the binary, and spends under a minute on the ap
 
 [`scripts/vercel-build.sh`](scripts/vercel-build.sh) then runs the release build and
 copies `target/dx/stroke/release/web/public` to `dist/`, so the Output Directory setting
-does not have to track `dx`'s layout across CLI versions. It fails loudly if the wasm or
-the search index is missing, which is the difference between a failed deploy and a blank
-page in production.
+does not have to track `dx`'s layout across CLI versions. It fails loudly if the wasm, the
+search index, the handwriting templates or any of the six HSK course levels is missing,
+which is the difference between a failed deploy and a blank page — or an HSK level that
+will not open — in production.
 
 Both scripts read their versions and paths from
 [`scripts/vercel-env.sh`](scripts/vercel-env.sh) and run anywhere, not just on Vercel:
@@ -141,7 +148,8 @@ would build twice.
 
 ## Data
 
-Everything under `public/data/` is generated. To rebuild it:
+Everything under `public/data/` is generated, by two scripts: the characters come from
+public datasets, the course units come from the React app. To rebuild the characters:
 
 ```bash
 python3 scripts/build-data.py
@@ -171,6 +179,53 @@ from the same Make Me a Hanzi graphics and uses an identical coordinate space. P
 Characters are ranked by HSK band, then corpus frequency. That ordering is why the index
 is columnar and rank-ordered: a prefix of it is already the most useful slice, so "most
 common characters" and "is this vendored locally" are both just offset comparisons.
+
+### The HSK course
+
+The course data is a second generated tree, from a different source and by a different
+script:
+
+```bash
+git clone https://github.com/soleysok/mssl-strok ../mssl-strok
+python3 scripts/build-hsk-data.py            # or --from PATH
+```
+
+| Output | Contents |
+| --- | --- |
+| `public/data/hsk/index.json` | 736 bytes: unit, word and character counts per level, plus provenance. Compiled into the wasm with `include_str!`, so the HSK hub renders its level cards without a fetch. |
+| `public/data/hsk/level-<n>.json` | One level: its units in teaching order (id, title, topic, headwords) and a word map with pinyin and up to three meanings. 48 KB for HSK 1 to 107 KB for HSK 6; fetched when that level is opened. |
+
+Which words a unit teaches, in what order, under what title is editorial work, and it
+already exists in the React app — [`soleysok/mssl-strok`](https://github.com/soleysok/mssl-strok)
+groups the 5,369 HSK 3.0 words into 512 themed units of at most twelve. Deriving units
+here from the raw vocabulary list would invent a second, slightly different course, so
+[`scripts/build-hsk-data.py`](scripts/build-hsk-data.py) copies that repository's own
+committed `public/data/hsk/level-*.json` and trims each one to the fields this app
+renders. See [`NOTICE`](NOTICE): the arrangement is the React app's, the vocabulary and
+meanings are still complete-hsk-vocabulary and CC-CEDICT.
+
+The trim is what makes the copy worth committing rather than the originals. It drops the
+example sentences with their per-token pinyin (which this app has no page for yet, and
+which are 85% of the bytes), part of speech, traditional forms, classifiers, corpus
+frequency, and the per-level character detail — that last one because all 9,574 characters
+are already in `public/data/index.json`, so a unit's characters are resolved against the
+dictionary at runtime instead of shipping twice. Six levels go from 3.2 MB to 505 KB, and
+no unit page loses anything. The reader ignores unknown fields, so dropping the untrimmed
+files in place of these still works if the sentences are ever wanted.
+
+| Level | Words | Units | Characters | File |
+| --- | --- | --- | --- | --- |
+| HSK 1 | 509 | 50 | 300 | 48 KB |
+| HSK 2 | 753 | 74 | 499 | 70 KB |
+| HSK 3 | 953 | 91 | 649 | 89 KB |
+| HSK 4 | 972 | 95 | 821 | 92 KB |
+| HSK 5 | 1,059 | 99 | 939 | 100 KB |
+| HSK 6 | 1,123 | 103 | 975 | 107 KB |
+
+A word is not a character: 你好 is a headword with no strokes of its own. So a word row
+leads to a search for the word, which the dictionary answers with the characters it is
+written with — each of which does have an animation. Every unit and every list also offers
+its characters directly, as the usual grid of tiles.
 
 ### How the stroke animation works
 
@@ -249,9 +304,21 @@ a 450 ms pause that keeps the matching from interrupting somebody mid-character.
   static stroke-order filmstrip; numbered senses; radical, stroke count and decomposition;
   other characters sharing the radical; Mandarin pronunciation via the browser's speech
   synthesiser; and save-to-list.
-- **HSK** (`/hsk`, `/hsk/:band`) — all seven bands with character counts, browsable down
-  to the characters each band introduces.
-- **My Lists** (`/lists`) — saved and recently viewed characters, in `localStorage`.
+- **HSK** (`/hsk`) — the syllabus from both ends. The course is `/hsk/:level` for a level's
+  units and `/hsk/:level/:unit` for the lesson itself: its words with pinyin and meaning,
+  the characters they are written with, the units either side of it, and one button that
+  turns the whole lesson into a saved list. `/hsk/band/:band` is the character side, all
+  seven bands including the merged 7-9 the course does not cover.
+- **My Lists** (`/lists`, `/lists/:id`) — several named lists in `localStorage`, started
+  empty or taken whole from an HSK unit, either from the lesson page or from the unit
+  picker on `/lists`. A list can be renamed, deleted, and pruned a word at a time, and one
+  imported from a unit links back to the lesson it came from. Saved and recently viewed
+  characters live on the same page, because they answer a different question from a list.
+
+Importing a unit is idempotent, which is the whole point of a one-tap button: a list
+remembers the unit it came from, so the second tap opens that list instead of making a
+second copy of it. A list that has since been pruned is left alone — the words that are
+missing were removed on purpose.
 
 ### Design
 
@@ -275,12 +342,16 @@ gap:
 
 ### HSK course
 
-The character side is done — every character carries its HSK 3.0 band. The course is not.
+Characters, units and words are here: every character carries its band, and all 512 units
+of all six levels are browsable and importable. What the React app still has that this does
+not:
 
-- **Word lists and units.** The React app ships 5,369 HSK words across 512 themed units,
-  with pinyin, CC-CEDICT meanings, part of speech, traditional forms, classifiers, and
-  7,596 Tatoeba example sentences with per-token pinyin. Needs a second generator pass
-  over `complete-hsk-vocabulary` plus a Tatoeba sentence pass, emitting per-level files.
+- **Example sentences.** 7,596 Tatoeba sentences with per-token pinyin, 83% of words
+  covered. They are in the source course files and are dropped by the import for want of a
+  page to put them on; adding one means keeping them, which roughly doubles a level file.
+- **Part of speech, traditional forms, classifiers.** Also in the source and also dropped,
+  for the same reason. Cheap to restore — a field each in `scripts/build-hsk-data.py` and
+  in `src/hsk.rs`.
 - **Practice and review.** Eight exercise kinds (meaning, recall, pinyin, listening,
   fill-the-gap, sentence building, speaking, writing), a tap-to-pair warm-up, and
   distractors ranked by similarity. Needs a seeded PRNG so a session does not reshuffle
@@ -304,8 +375,14 @@ Mandarin playback works. What's missing:
 
 ### My Lists
 
-- Several named lists you can reorder and study as a set, rather than one flat list.
-- Import and export as plain text.
+Named lists and course imports are here. Still missing:
+
+- **Studying a list.** Hiding the pinyin, the translation, or both, per list, which is what
+  turns a list into a drill rather than a reference.
+- **Reordering**, and adding a word straight from the dictionary or the handwriting pad
+  rather than only from a unit.
+- **Import and export** as plain text. The stored document already matches the React app's
+  `stroke:lists:v1` shape field for field, so the two could exchange lists as JSON.
 
 ### Login
 
@@ -332,21 +409,26 @@ src/
   main.rs                     route table, app root
   data.rs                     search index, per-character fetch, the search tiers
   index.rs                    the index, loaded once and shared through context
+  hsk.rs                      the course: levels, units, words, per-level fetch
+  lists.rs                    named lists: the document, its mutations, localStorage
   recognize.rs                handwriting lookup: normalising, resampling, matching
-  storage.rs                  saved and recent, in localStorage
+  storage.rs                  saved and recent characters, and the raw localStorage keys
   speech.rs                   Mandarin playback via speechSynthesis
+  text.rs                     grouped numbers and counted nouns
   url.rs                      percent-encoding for routes carrying Han characters
   components/
     stroke_player.rs          the animation: timeline, transform, controls
     stroke_pad.rs             the writing surface: ink, undo, clear
     shell.rs                  top bar, phone tab bar, footer, page furniture
     char_list.rs              character grid and search-result rows
+    word_list.rs              word rows, for a unit and for a list
     search_field.rs
     icons.rs
   routes/                     home, draw, search, character, hsk, lists, not_found
 assets/main.css               design tokens and base styles
 public/data/                  generated; see Data above
-scripts/build-data.py         the generator
+scripts/build-data.py         the character generator
+scripts/build-hsk-data.py     the course import
 scripts/vercel-*.sh           the deploy: toolchain, build, shared paths
 vercel.json                   Vercel settings, SPA rewrite, cache headers
 ```

@@ -14,6 +14,7 @@ use crate::components::shell::{Empty, RoadmapItem, Section};
 use crate::components::word_list::{WordRow, WordRows};
 use crate::index::{self, use_index};
 use crate::lists;
+use crate::text;
 use crate::{hsk, Route};
 
 /// HSK 3.0 has nine levels; 7, 8 and 9 share one vocabulary list and are treated
@@ -51,7 +52,7 @@ pub fn Hsk() -> Element {
                 h1 { "HSK" }
                 p { class: "lede",
                     "The HSK 3.0 syllabus, from both ends: the course splits "
-                    "{hsk::total_words()} words into {hsk::total_units()} short units, "
+                    "{text::grouped(hsk::total_words())} words into {hsk::total_units()} short units, "
                     "and the dictionary tags every character with the band that introduces it."
                 }
             }
@@ -103,7 +104,7 @@ pub fn Hsk() -> Element {
                             title: "Word Lists And Units".to_string(),
                             detail: format!(
                                 "{} words in {} themed units, any of which becomes a saved list in one tap.",
-                                hsk::total_words(),
+                                text::grouped(hsk::total_words()),
                                 hsk::total_units(),
                             ),
                         }
@@ -153,7 +154,7 @@ pub fn HskLevel(level: u8) -> Element {
             header { class: "section",
                 h1 { "HSK {level}" }
                 p { class: "lede",
-                    "{summary.word_count} words in {summary.unit_count} units, grouped by theme. "
+                    "{text::grouped(summary.word_count)} words in {summary.unit_count} units, grouped by theme. "
                     "Open a unit to read its words, or add the whole lesson to My Lists."
                 }
             }
@@ -306,7 +307,7 @@ fn Lesson(
             div { class: "badges",
                 span { class: "badge badge-accent", "HSK {level}" }
                 span { class: "badge num", "Unit {unit.number()}" }
-                span { class: "badge num", "{count} words" }
+                span { class: "badge num", "{text::counted(count, \"word\")}" }
             }
             p { class: "lede",
                 "The words this lesson teaches, in the order it teaches them. "

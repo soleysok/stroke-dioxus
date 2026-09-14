@@ -11,6 +11,7 @@ mod recognize;
 mod routes;
 mod speech;
 mod storage;
+mod text;
 mod url;
 
 use dioxus::prelude::*;

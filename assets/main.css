@@ -792,9 +792,15 @@ p {
 }
 
 .row-pinyin {
+  min-width: 0;
   font-size: var(--text-callout);
   font-weight: 600;
   color: var(--label);
+  /* A unit or list title is a line, not a paragraph: one line, then an ellipsis,
+   * so rows stay the same height however long the name is. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .row-gloss {
@@ -908,6 +914,52 @@ p {
   opacity: 0.75;
 }
 
+/* The level chooser above the unit picker: a full-width segmented control with a
+ * label, since six "HSK n" segments do not fit across a phone. */
+.picker-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.picker-label {
+  flex-shrink: 0;
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+  font-weight: 600;
+}
+
+.picker-head .segmented {
+  flex: 1;
+  min-width: 0;
+}
+
+.picker-head .segment {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tap);
+  padding-inline: 0.25rem;
+  font-size: var(--text-subhead);
+}
+
+.picker-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+}
+
+.picker-number {
+  color: var(--label-3);
+  font-size: var(--text-footnote);
+}
+
+.picker-name {
+  font-size: var(--text-callout);
+  font-weight: 600;
+  color: var(--label);
+}
+
 /* A picker inside a card: long enough to browse, short enough to leave the page
  * usable underneath. */
 .rows-scroll {
@@ -921,6 +973,7 @@ p {
 .badge {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
   gap: 0.25rem;
   padding: 0.125rem 0.5rem;
   border-radius: var(--radius-pill);

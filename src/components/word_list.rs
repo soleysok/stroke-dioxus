@@ -69,7 +69,11 @@ fn Row(row: WordRow, on_remove: Option<EventHandler<String>>) -> Element {
                     }
                     div { class: "row-gloss", "{row.gloss}" }
                 }
-                span { class: "row-chevron", icons::Chevron {} }
+                // One trailing mark per row: the chevron would compete with the
+                // remove button for the same corner.
+                if on_remove.is_none() {
+                    span { class: "row-chevron", icons::Chevron {} }
+                }
             }
             if let Some(remove) = on_remove {
                 button {

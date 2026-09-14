@@ -14,6 +14,7 @@ use crate::components::shell::{Empty, RoadmapItem, Section};
 use crate::components::word_list::{WordRow, WordRows};
 use crate::index::{self, use_index};
 use crate::lists::{self, ListSource};
+use crate::text;
 use crate::{hsk, storage, Route};
 
 /// Headwords shown on a picker row before it would start wrapping on a phone.
@@ -73,7 +74,7 @@ pub fn Lists() -> Element {
                 }
                 if !doc.lists.is_empty() {
                     p { class: "action-note num",
-                        "{doc.lists.len()} lists · {doc.total_words()} words"
+                        "{text::counted(doc.lists.len(), \"list\")} · {text::counted(doc.total_words(), \"word\")}"
                     }
                 }
 
@@ -160,7 +161,7 @@ pub fn Lists() -> Element {
                                 key: "{list.id}",
                                 id: list.id.clone(),
                                 title: list.title.clone(),
-                                detail: format!("{} · {} words", list.source.label(), list.words.len()),
+                                detail: format!("{} · {}", list.source.label(), text::counted(list.words.len(), "word")),
                                 armed: arming() == Some(list.id.clone()),
                                 arming,
                             }
@@ -286,15 +287,22 @@ fn UnitPicker() -> Element {
 
     rsx! {
         div { class: "card card-pad stack",
-            div { class: "segmented", role: "group", aria_label: "HSK level",
-                for option in hsk::LEVELS {
-                    button {
-                        key: "{option}",
-                        class: "segment",
-                        r#type: "button",
-                        aria_pressed: (option == level()).to_string(),
-                        onclick: move |_| level.set(option),
-                        "HSK {option}"
+            // Numbers rather than "HSK 1", which wraps at six across on a phone.
+            // The label carries what they are; each button says it again for
+            // anything reading the page aloud.
+            div { class: "picker-head",
+                span { class: "picker-label", "HSK level" }
+                div { class: "segmented", role: "group", aria_label: "HSK level",
+                    for option in hsk::LEVELS {
+                        button {
+                            key: "{option}",
+                            class: "segment num",
+                            r#type: "button",
+                            aria_label: "HSK {option}",
+                            aria_pressed: (option == level()).to_string(),
+                            onclick: move |_| level.set(option),
+                            "{option}"
+                        }
                     }
                 }
             }
@@ -385,11 +393,14 @@ fn PickerRow(level: u8, unit: hsk::Unit, words: Vec<hsk::Word>, added: bool) -> 
 
     rsx! {
         div { class: "row-split",
+            // The title wraps here rather than truncating: what separates
+            // "Family & relationships 1" from "2" is the part an ellipsis eats,
+            // and the Add button leaves a narrow column on a phone.
             div { class: "row",
-                span { class: "row-index num", aria_hidden: "true", "{number}" }
                 div { class: "row-body",
-                    div { class: "row-title",
-                        span { class: "row-pinyin", "{unit.title}" }
+                    div { class: "picker-title",
+                        span { class: "picker-number num", aria_hidden: "true", "{number}" }
+                        span { class: "picker-name", "{unit.title}" }
                         if added {
                             span { class: "badge badge-accent", "Added" }
                         }
@@ -501,7 +512,7 @@ pub fn ListDetail(id: String) -> Element {
 
                 div { class: "badges",
                     span { class: "badge", "{list.source.label()}" }
-                    span { class: "badge num", "{count} words" }
+                    span { class: "badge num", "{text::counted(count, \"word\")}" }
                 }
 
                 div { class: "actions",
