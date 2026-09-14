@@ -7,7 +7,9 @@ use crate::components::icons;
 use crate::components::shell::{Empty, Section};
 use crate::components::stroke_player::{StrokeFrame, StrokePlayer};
 use crate::data::{self, Character};
+use crate::history;
 use crate::index::{self, use_index};
+use crate::Route;
 use crate::{speech, storage, url};
 
 /// How many other characters to offer under "same radical" and "same reading".
@@ -16,9 +18,18 @@ const RELATED: usize = 24;
 #[component]
 pub fn CharacterPage(glyph: String) -> Element {
     let state = use_index();
+    let entry = history::use_entry();
     // The route segment may arrive percent-encoded or literal depending on how it
     // was navigated to; `decode_char` handles both.
     let target = use_memo(use_reactive!(|(glyph,)| url::decode_char(&glyph)));
+
+    // Settled once per character rather than per render, because reading the note
+    // the pad left also clears a stale one.
+    let back = use_memo(move || match target() {
+        Some(glyph) if storage::came_from_draw(glyph) => Back::Draw,
+        _ if entry.app_has_pushed() => Back::Previous,
+        _ => Back::Browse,
+    });
 
     let character = use_resource(move || async move {
         let Some(glyph) = target() else {
@@ -41,7 +52,9 @@ pub fn CharacterPage(glyph: String) -> Element {
     });
 
     rsx! {
-        div { class: "stack", style: "padding-top: 1.5rem",
+        div { class: "stack", style: "padding-top: 0.75rem",
+            BackLink { back: back() }
+
             match &*character.read_unchecked() {
                 Some(Ok(loaded)) => rsx! { Detail { character: loaded.as_ref().clone() } },
                 Some(Err(message)) if message == "loading" => rsx! { Loading {} },
@@ -60,6 +73,52 @@ pub fn CharacterPage(glyph: String) -> Element {
 fn Loading() -> Element {
     rsx! {
         div { class: "empty", p { "Loading stroke data…" } }
+    }
+}
+
+/// Where the Back control leads. A character can be arrived at from anywhere,
+/// including from nowhere — a shared link opened in a new tab — so the control
+/// says where it goes rather than promising an undo.
+#[derive(Clone, Copy, PartialEq)]
+enum Back {
+    /// The handwriting pad, for a character that was written to be found.
+    Draw,
+    /// The page the app came from, whichever it was: the browser knows the entry
+    /// behind this one and we do not.
+    Previous,
+    /// The app has not navigated anywhere yet — a shared link opened cold — so
+    /// there is nothing of ours to go back to. Browsing is the way out.
+    Browse,
+}
+
+/// Back, in the Apple sense: top-leading, a chevron, and the name of where it
+/// leads. Rendered above the character so it is the first thing a thumb finds.
+#[component]
+fn BackLink(back: Back) -> Element {
+    let navigator = use_navigator();
+
+    match back {
+        Back::Draw => rsx! {
+            Link { class: "backlink", to: Route::Draw {}, aria_label: "Back to Draw",
+                icons::ChevronBack {}
+                span { "Draw" }
+            }
+        },
+        Back::Previous => rsx! {
+            button {
+                class: "backlink",
+                r#type: "button",
+                onclick: move |_| navigator.go_back(),
+                icons::ChevronBack {}
+                span { "Back" }
+            }
+        },
+        Back::Browse => rsx! {
+            Link { class: "backlink", to: Route::Home {}, aria_label: "Back to Browse",
+                icons::ChevronBack {}
+                span { "Browse" }
+            }
+        },
     }
 }
 

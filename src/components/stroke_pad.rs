@@ -126,10 +126,13 @@ pub fn StrokePad(
                     icons::Undo {}
                     "Undo"
                 }
+                // Starting over is the way out of a match that went nowhere, so
+                // it is the one control here that is tinted rather than plain.
                 button {
-                    class: "btn",
+                    class: "btn btn-tinted",
                     r#type: "button",
                     disabled: !inked,
+                    aria_label: "Clear the pad",
                     onclick: move |_| {
                         current.write().clear();
                         strokes.write().clear();

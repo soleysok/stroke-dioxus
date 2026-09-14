@@ -14,6 +14,7 @@ use crate::components::shell::Section;
 use crate::components::stroke_pad::StrokePad;
 use crate::index::{self, use_index};
 use crate::recognize;
+use crate::storage;
 
 /// How long after the last stroke to wait before matching. Long enough not to
 /// interrupt somebody mid-character, short enough to feel like a reaction.
@@ -26,7 +27,14 @@ const CANDIDATES: usize = 8;
 #[component]
 pub fn Draw() -> Element {
     let state = use_index();
+    // A fresh pad every time the page is mounted, including on the way back from
+    // a candidate: the character that was just looked up has been read, and the
+    // next one is written from scratch.
     let strokes = use_signal(Vec::new);
+
+    // Being here is the end of whatever the pad last opened, so the note it left
+    // for that character page is spent.
+    use_hook(storage::forget_from_draw);
 
     // Keyed on the strokes, so a new one cancels this and starts it again — and
     // with it the pause it opens with, which is what debounces the matching while
@@ -92,7 +100,12 @@ pub fn Draw() -> Element {
                         p { class: "draw-note", "Candidates appear here as you write." }
                     } else if !candidates().is_empty() {
                         Section { title: "Looks Like".to_string(),
-                            CharGrid { entries: candidates() }
+                            // Noted as it is tapped, so the character page can
+                            // offer the way back to the pad.
+                            CharGrid {
+                                entries: candidates(),
+                                on_pick: storage::mark_from_draw,
+                            }
                         }
                     } else if settling() {
                         p { class: "draw-note", "Looking…" }

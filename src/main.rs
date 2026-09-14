@@ -4,6 +4,7 @@
 
 mod components;
 mod data;
+mod history;
 mod index;
 mod recognize;
 mod routes;
@@ -63,6 +64,9 @@ fn main() {
 fn App() -> Element {
     // Loads the dictionary index once and publishes it to every route.
     index::provide_index();
+    // Noted before anything can navigate, so a page can tell whether it was
+    // arrived at from inside the app or opened cold.
+    history::provide_entry();
 
     rsx! {
         document::Link { rel: "stylesheet", href: MAIN_CSS }
