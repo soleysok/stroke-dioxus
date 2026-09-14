@@ -27,6 +27,15 @@ web-sys = { version = "0.3.77", features = [
   "SpeechSynthesis",
   "SpeechSynthesisUtterance",
   "SpeechSynthesisVoice",
+  # The handwriting pad measures a pointer against its own box, which needs the
+  # raw event rather than Dioxus's synthetic one.
+  "DomRect",
+  "Element",
+  "Event",
+  "EventTarget",
+  "MouseEvent",
+  "PointerEvent",
+  "UiEvent",
 ] }
 
 # Character routes carry the literal hanzi, which must survive a round trip

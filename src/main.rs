@@ -5,6 +5,7 @@
 mod components;
 mod data;
 mod index;
+mod recognize;
 mod routes;
 mod speech;
 mod storage;
@@ -14,7 +15,7 @@ use dioxus::prelude::*;
 
 use components::shell::Shell;
 use routes::{
-    character::CharacterPage, home::Home, hsk::Hsk, hsk::HskBand, lists::Lists,
+    character::CharacterPage, draw::Draw, home::Home, hsk::Hsk, hsk::HskBand, lists::Lists,
     not_found::NotFound, search::Search,
 };
 
@@ -31,6 +32,9 @@ enum Route {
 
         #[route("/search?:q")]
         Search { q: String },
+
+        #[route("/draw")]
+        Draw {},
 
         // The segment holds the character itself, percent-encoded. See `crate::url`.
         #[route("/character/:glyph")]

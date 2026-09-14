@@ -11,7 +11,7 @@ use std::rc::Rc;
 use serde::Deserialize;
 
 /// Where the generated data lives, relative to the site root.
-const DATA_ROOT: &str = "/data";
+pub const DATA_ROOT: &str = "/data";
 
 /// Rare characters have no vendored stroke file (see `scripts/build-data.py`), so
 /// they fall back to the jsDelivr mirror of hanzi-writer-data. That package is
@@ -428,6 +428,20 @@ pub async fn load_character(
 }
 
 async fn fetch_json<T: serde::de::DeserializeOwned>(url: &str) -> Result<T, String> {
+    fetch(url)
+        .await?
+        .json::<T>()
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Raw bytes, for the one generated file that is not JSON — see
+/// [`crate::recognize`].
+pub async fn fetch_bytes(url: &str) -> Result<Vec<u8>, String> {
+    fetch(url).await?.binary().await.map_err(|e| e.to_string())
+}
+
+async fn fetch(url: &str) -> Result<gloo_net::http::Response, String> {
     let response = gloo_net::http::Request::get(url)
         .send()
         .await
@@ -435,5 +449,5 @@ async fn fetch_json<T: serde::de::DeserializeOwned>(url: &str) -> Result<T, Stri
     if !response.ok() {
         return Err(format!("HTTP {}", response.status()));
     }
-    response.json::<T>().await.map_err(|e| e.to_string())
+    Ok(response)
 }

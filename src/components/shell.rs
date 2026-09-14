@@ -22,9 +22,10 @@ pub fn Shell() -> Element {
 }
 
 /// Destinations shown in both navigation surfaces, in order.
-fn destinations() -> [(Route, &'static str); 3] {
+fn destinations() -> [(Route, &'static str); 4] {
     [
         (Route::Home {}, "Browse"),
+        (Route::Draw {}, "Draw"),
         (Route::Hsk {}, "HSK"),
         (Route::Lists {}, "My Lists"),
     ]
@@ -60,6 +61,7 @@ fn TopBar() -> Element {
 #[component]
 fn TabBar() -> Element {
     let icon = |label: &str| match label {
+        "Draw" => rsx! { icons::TabDraw {} },
         "HSK" => rsx! { icons::TabLevels {} },
         "My Lists" => rsx! { icons::TabLists {} },
         _ => rsx! { icons::TabBrowse {} },

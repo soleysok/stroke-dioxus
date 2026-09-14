@@ -37,36 +37,48 @@ pub fn SearchField(
     };
 
     rsx! {
-        form {
-            class: "searchfield",
-            role: "search",
-            onsubmit: move |event| {
-                // Dioxus 0.7 allows native form submission by default, which
-                // would reload the page.
-                event.prevent_default();
-                submit(());
-            },
-            span { icons::Search {} }
-            input {
-                r#type: "search",
-                value: "{query}",
-                autofocus,
-                autocomplete: "off",
-                autocapitalize: "off",
-                spellcheck: "false",
-                enterkeyhint: "search",
-                aria_label: "Search characters",
-                placeholder: "字, pinyin, or meaning",
-                oninput: move |event| query.set(event.value()),
-            }
-            if !query().is_empty() {
-                button {
-                    class: "searchfield-clear",
-                    r#type: "button",
-                    aria_label: "Clear Search",
-                    onclick: move |_| query.set(String::new()),
-                    icons::Clear {}
+        div { class: "lookup",
+            form {
+                class: "searchfield",
+                role: "search",
+                onsubmit: move |event| {
+                    // Dioxus 0.7 allows native form submission by default, which
+                    // would reload the page.
+                    event.prevent_default();
+                    submit(());
+                },
+                span { icons::Search {} }
+                input {
+                    r#type: "search",
+                    value: "{query}",
+                    autofocus,
+                    autocomplete: "off",
+                    autocapitalize: "off",
+                    spellcheck: "false",
+                    enterkeyhint: "search",
+                    aria_label: "Search characters",
+                    placeholder: "字, pinyin, or meaning",
+                    oninput: move |event| query.set(event.value()),
                 }
+                if !query().is_empty() {
+                    button {
+                        class: "searchfield-clear",
+                        r#type: "button",
+                        aria_label: "Clear Search",
+                        onclick: move |_| query.set(String::new()),
+                        icons::Clear {}
+                    }
+                }
+            }
+
+            // The way in for a character you can see but cannot type, offered
+            // where somebody has just discovered they cannot type it.
+            Link {
+                class: "btn lookup-draw",
+                to: Route::Draw {},
+                aria_label: "Draw A Character",
+                icons::TabDraw {}
+                span { class: "lookup-draw-label", "Draw" }
             }
         }
     }
