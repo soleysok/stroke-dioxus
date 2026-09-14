@@ -55,8 +55,8 @@ what they are really guarding is that the generator and the matcher still agree:
 cargo test
 ```
 
-Current release payload: **893 KB of wasm (259 KB brotli, which is what Vercel serves)**
-plus a 518 KB search index, both fetched once. The Draw pad's 344 KB of handwriting
+Current release payload: **893 KB of wasm (265 KB brotli, which is what Vercel serves)**
+plus a 518 KB search index, both fetched once. The Draw pad's 352 KB of handwriting
 templates are fetched the first time somebody opens it, and not before — the pad's share
 of the wasm is 16 KB brotli.
 
@@ -153,7 +153,7 @@ The script downloads its sources into `scripts/.cache/` (reused on later runs) a
 | --- | --- |
 | `public/data/index.json` | 518 KB columnar search index over all 9,574 characters — reading, toneless pinyin keys, short gloss, stroke count, HSK band, radical. |
 | `public/data/char/<hex>.json` | Per character: stroke outlines, stroke medians, and the full dictionary entry. Named by zero-padded Unicode code point so filenames stay ASCII. |
-| `public/data/strokes.bin` | 344 KB of handwriting templates for the Draw pad: the same medians, normalised and resampled. Fetched only when somebody opens the pad. |
+| `public/data/strokes.bin` | 352 KB of handwriting templates for the Draw pad: the same medians, normalised and resampled. Fetched only when somebody opens the pad. |
 
 Sources are [Make Me a Hanzi](https://github.com/skishore/makemeahanzi) for graphics and
 definitions, and
@@ -208,7 +208,7 @@ by the longer side of their bounding box and centres them, so absolute size and 
 drop out but proportion survives — 一 still spreads across one line and 目 still stands in
 a narrow column. Resampling then reduces each stroke to six evenly spaced points, which is
 what makes a median's handful of samples comparable to the few hundred points a finger
-drags out. Quantised to a byte per coordinate, that is 344 KB for 2,970 characters, and it
+drags out. Quantised to a byte per coordinate, that is 352 KB for 2,970 characters, and it
 is fetched only when somebody opens the pad.
 
 A drawing is put through the same two steps, so the comparison is like for like — which is
