@@ -146,9 +146,10 @@ pub fn HskLevel(level: u8) -> Element {
     let imported = imported();
 
     rsx! {
-        div { class: "stack", style: "padding-top: 1.5rem",
-            nav { class: "crumbs", aria_label: "Breadcrumb",
-                Link { to: Route::Hsk {}, "HSK" }
+        div { class: "stack", style: "padding-top: 0.75rem",
+            Link { class: "backlink", to: Route::Hsk {}, aria_label: "Back to HSK",
+                icons::ChevronBack {}
+                span { "HSK" }
             }
 
             header { class: "section",
@@ -217,11 +218,13 @@ pub fn HskUnitPage(level: u8, unit: String) -> Element {
     }
 
     rsx! {
-        div { class: "stack", style: "padding-top: 1.5rem",
-            nav { class: "crumbs", aria_label: "Breadcrumb",
-                Link { to: Route::Hsk {}, "HSK" }
-                span { aria_hidden: "true", "›" }
-                Link { to: Route::HskLevel { level }, "HSK {level}" }
+        div { class: "stack", style: "padding-top: 0.75rem",
+            Link {
+                class: "backlink",
+                to: Route::HskLevel { level },
+                aria_label: "Back to HSK {level}",
+                icons::ChevronBack {}
+                span { "HSK {level}" }
             }
 
             match &*course.read_unchecked() {
@@ -405,9 +408,10 @@ pub fn HskBand(band: u8) -> Element {
     };
 
     rsx! {
-        div { class: "stack", style: "padding-top: 1.5rem",
-            nav { class: "crumbs", aria_label: "Breadcrumb",
-                Link { to: Route::Hsk {}, "HSK" }
+        div { class: "stack", style: "padding-top: 0.75rem",
+            Link { class: "backlink", to: Route::Hsk {}, aria_label: "Back to HSK",
+                icons::ChevronBack {}
+                span { "HSK" }
             }
 
             header { class: "section",

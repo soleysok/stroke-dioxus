@@ -682,26 +682,6 @@ p {
   color: var(--label-3);
 }
 
-/* Where you are, for a page reached from a level or a lesson. */
-.crumbs {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  /* Pulls the following header back up: the stack's 1.5rem gap is too much
-   * between a breadcrumb and its own title. */
-  margin-bottom: -1rem;
-  color: var(--label-3);
-  font-size: var(--text-footnote);
-}
-
-.crumbs a {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--tap);
-  color: var(--accent);
-  font-weight: 500;
-}
-
 /* Previous and next unit, side by side. */
 .pager {
   display: flex;

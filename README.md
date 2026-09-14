@@ -338,6 +338,11 @@ Cinnabar is the single accent — the colour of seal paste (印泥), so it belon
 subject rather than being decoration. It marks the stroke currently being drawn, which
 doubles as the animation's primary affordance.
 
+Going back is one control everywhere: top-leading, a chevron, and the name of where it
+leads. A page with one parent names it — `HSK 1` from a lesson, `My Lists` from a list —
+and only the character page, which can be arrived at from anywhere, has to work out at
+runtime whether that is Draw, the previous page, or Browse.
+
 ---
 
 ## Roadmap: Parity With mssl-strok

@@ -481,9 +481,10 @@ pub fn ListDetail(id: String) -> Element {
     };
 
     rsx! {
-        div { class: "stack", style: "padding-top: 1.5rem",
-            nav { class: "crumbs", aria_label: "Breadcrumb",
-                Link { to: Route::Lists {}, "My Lists" }
+        div { class: "stack", style: "padding-top: 0.75rem",
+            Link { class: "backlink", to: Route::Lists {}, aria_label: "Back to My Lists",
+                icons::ChevronBack {}
+                span { "My Lists" }
             }
 
             header { class: "section",
