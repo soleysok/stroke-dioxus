@@ -1,0 +1,42 @@
+Stroke Order — third-party data notices
+=======================================
+
+The application code in this repository is MIT licensed (see LICENSE). The
+character data under `public/data/` is generated from third-party sources by
+`scripts/build-data.py` and carries the licences below.
+
+
+Make Me a Hanzi
+---------------
+https://github.com/skishore/makemeahanzi
+
+Source of every stroke outline and stroke median in `public/data/char/*.json`,
+and of the pinyin readings, English definitions, radicals and decompositions in
+`public/data/index.json`.
+
+Make Me a Hanzi is released under the LGPL, and its glyph data derives from the
+Arphic PL fonts, which are distributed under the ARPHIC PUBLIC LICENSE. Its
+definitions come from CC-CEDICT (CC BY-SA 4.0) and the Unicode Consortium's
+Unihan database.
+
+Per the ARPHIC PUBLIC LICENSE, the character graphics may be freely copied and
+redistributed provided this notice is retained and derivative font software
+carries the same licence.
+
+
+hanzi-writer-data
+-----------------
+https://github.com/chanind/hanzi-writer-data
+
+Stroke data for characters not vendored in this repository is fetched at runtime
+from the jsDelivr mirror of this package. It is itself derived from Make Me a
+Hanzi and carries the same LGPL / ARPHIC terms.
+
+
+complete-hsk-vocabulary
+-----------------------
+https://github.com/drkameleon/complete-hsk-vocabulary
+
+Source of the HSK 3.0 band and corpus frequency used to rank characters and to
+populate the HSK section. MIT licensed. Its meanings derive from CC-CEDICT
+(CC BY-SA 4.0).
