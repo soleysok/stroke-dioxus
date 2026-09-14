@@ -1,0 +1,60 @@
+# Fallback deploy path: build the site here, ship the finished output to Vercel.
+#
+# Vercel's build image is Amazon Linux 2023, which has no Rust and a glibc too
+# old for the prebuilt `dx`, so a deploy there compiles the Dioxus CLI from
+# source once per build cache — roughly twenty minutes on the first build of a
+# cache key. GitHub's runners can just download `dx`, so the same build takes a
+# few minutes here.
+#
+# This workflow is manual on purpose. Deploys normally come from Vercel's Git
+# integration; run this instead if a Vercel build times out or its build image
+# changes under us. See the README's Deployment section before enabling it.
+
+name: Deploy to Vercel
+
+on:
+  workflow_dispatch:
+    inputs:
+      production:
+        description: "Deploy to production rather than a preview URL"
+        type: boolean
+        default: false
+
+concurrency:
+  group: vercel-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache the Rust build
+        uses: actions/cache@v4
+        with:
+          path: |
+            .rust/cargo/registry
+            target
+          key: vercel-deploy-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: vercel-deploy-${{ runner.os }}-
+
+      # The same script Vercel runs, so the two paths cannot drift apart. Here it
+      # takes the prebuilt `dx` and finishes in well under a minute.
+      - run: bash scripts/vercel-install.sh
+
+      - name: Build through the Vercel CLI
+        # `vercel build` reads vercel.json, so the rewrites and headers stay in
+        # one place rather than being restated here.
+        run: |
+          npm install --global vercel@latest
+          vercel pull --yes --token="$VERCEL_TOKEN" \
+            --environment="${{ inputs.production && 'production' || 'preview' }}"
+          vercel build ${{ inputs.production && '--prod' || '' }} --token="$VERCEL_TOKEN"
+
+      - name: Deploy the build output
+        run: vercel deploy --prebuilt ${{ inputs.production && '--prod' || '' }} --token="$VERCEL_TOKEN"
