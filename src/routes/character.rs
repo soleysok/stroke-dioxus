@@ -7,6 +7,7 @@ use crate::components::icons;
 use crate::components::shell::{Empty, Section};
 use crate::components::stroke_player::{StrokeFrame, StrokePlayer};
 use crate::data::{self, Character};
+use crate::history;
 use crate::index::{self, use_index};
 use crate::Route;
 use crate::{speech, storage, url};
@@ -17,7 +18,7 @@ const RELATED: usize = 24;
 #[component]
 pub fn CharacterPage(glyph: String) -> Element {
     let state = use_index();
-    let navigator = use_navigator();
+    let entry = history::use_entry();
     // The route segment may arrive percent-encoded or literal depending on how it
     // was navigated to; `decode_char` handles both.
     let target = use_memo(use_reactive!(|(glyph,)| url::decode_char(&glyph)));
@@ -26,7 +27,7 @@ pub fn CharacterPage(glyph: String) -> Element {
     // the pad left also clears a stale one.
     let back = use_memo(move || match target() {
         Some(glyph) if storage::came_from_draw(glyph) => Back::Draw,
-        _ if navigator.can_go_back() => Back::Previous,
+        _ if entry.app_has_pushed() => Back::Previous,
         _ => Back::Browse,
     });
 
@@ -82,9 +83,11 @@ fn Loading() -> Element {
 enum Back {
     /// The handwriting pad, for a character that was written to be found.
     Draw,
-    /// Whatever was on screen before this, which the browser knows and we do not.
+    /// The page the app came from, whichever it was: the browser knows the entry
+    /// behind this one and we do not.
     Previous,
-    /// Nothing was: browsing is the way out of a cold start.
+    /// The app has not navigated anywhere yet — a shared link opened cold — so
+    /// there is nothing of ours to go back to. Browsing is the way out.
     Browse,
 }
 

@@ -27,6 +27,9 @@ web-sys = { version = "0.3.77", features = [
   "SpeechSynthesis",
   "SpeechSynthesisUtterance",
   "SpeechSynthesisVoice",
+  # The character page's Back control asks how long the session history is, to
+  # tell a back that stays in the app from one that leaves it.
+  "History",
   # The handwriting pad measures a pointer against its own box, which needs the
   # raw event rather than Dioxus's synthetic one.
   "DomRect",
