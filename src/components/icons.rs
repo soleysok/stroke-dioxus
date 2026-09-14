@@ -139,6 +139,27 @@ pub fn Erase() -> Element {
 }
 
 #[component]
+pub fn Plus() -> Element {
+    rsx! {
+        Line { weight: 2.25, path { d: "M12 5.5v13M5.5 12h13" } }
+    }
+}
+
+/// A bin, for deleting a list. Deliberately quiet: it sits at the end of a row
+/// and needs a second tap to do anything.
+#[component]
+pub fn Trash() -> Element {
+    rsx! {
+        Line {
+            path { d: "M4.5 7.5h15" }
+            path { d: "M9.5 7.5V5.5h5v2" }
+            path { d: "M6.5 7.5l.9 12h9.2l.9-12" }
+            path { d: "M10.5 11v5M13.5 11v5" }
+        }
+    }
+}
+
+#[component]
 pub fn Chevron() -> Element {
     rsx! {
         Line { weight: 2.25, path { d: "M9 5l7 7-7 7" } }

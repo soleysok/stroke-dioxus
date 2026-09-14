@@ -427,7 +427,7 @@ pub async fn load_character(
     Ok(character)
 }
 
-async fn fetch_json<T: serde::de::DeserializeOwned>(url: &str) -> Result<T, String> {
+pub(crate) async fn fetch_json<T: serde::de::DeserializeOwned>(url: &str) -> Result<T, String> {
     fetch(url)
         .await?
         .json::<T>()

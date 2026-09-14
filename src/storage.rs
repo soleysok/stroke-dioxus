@@ -1,8 +1,9 @@
-//! Recently viewed and saved characters, persisted in `localStorage`.
+//! Recently viewed and saved characters, persisted in `localStorage`, plus the
+//! raw accessors [`crate::lists`] stores its named lists through.
 //!
-//! There is no account system yet, so this is the whole of "My Lists" for now.
-//! Values are stored as a plain string of characters rather than JSON, which
-//! keeps them small and readable in devtools.
+//! There is no account system, so everything here is per-device. Characters are
+//! stored as a plain string rather than JSON, which keeps them small and readable
+//! in devtools; the named lists need structure and are JSON.
 
 const RECENT_KEY: &str = "stroke:recent";
 const SAVED_KEY: &str = "stroke:saved";
@@ -16,18 +17,29 @@ fn storage() -> Option<web_sys::Storage> {
     web_sys::window()?.local_storage().ok().flatten()
 }
 
+/// Read one key. `None` when it is unset or storage is unavailable, which are the
+/// same thing as far as any caller is concerned.
+pub(crate) fn read_text(key: &str) -> Option<String> {
+    storage()?.get_item(key).ok().flatten()
+}
+
+/// Write one key, silently doing nothing when storage is blocked or full. A
+/// failed write costs the visitor their saved words, not the page they are on.
+pub(crate) fn write_text(key: &str, value: &str) {
+    if let Some(store) = storage() {
+        let _ = store.set_item(key, value);
+    }
+}
+
 fn read(key: &str) -> Vec<char> {
-    storage()
-        .and_then(|s| s.get_item(key).ok().flatten())
+    read_text(key)
         .map(|raw| raw.chars().collect())
         .unwrap_or_default()
 }
 
 fn write(key: &str, chars: &[char]) {
-    if let Some(store) = storage() {
-        let value: String = chars.iter().collect();
-        let _ = store.set_item(key, &value);
-    }
+    let value: String = chars.iter().collect();
+    write_text(key, &value);
 }
 
 pub fn recent() -> Vec<char> {
