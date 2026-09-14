@@ -4,6 +4,7 @@
 
 mod components;
 mod data;
+mod history;
 mod hsk;
 mod index;
 mod lists;
@@ -84,6 +85,9 @@ fn main() {
 fn App() -> Element {
     // Loads the dictionary index once and publishes it to every route.
     index::provide_index();
+    // Noted before anything can navigate, so a page can tell whether it was
+    // arrived at from inside the app or opened cold.
+    history::provide_entry();
     // Reads the saved lists once, so a list imported on an HSK unit page is on
     // /lists without a reload.
     lists::provide();

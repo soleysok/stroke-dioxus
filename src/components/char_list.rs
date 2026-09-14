@@ -15,7 +15,13 @@ fn route_for(glyph: char) -> Route {
 }
 
 #[component]
-pub fn CharGrid(entries: Vec<Summary>) -> Element {
+pub fn CharGrid(
+    entries: Vec<Summary>,
+    /// Called with the character a tile leads to, as it is tapped. The Draw page
+    /// uses it to note where the character page is about to be arrived from.
+    #[props(default)]
+    on_pick: Option<EventHandler<char>>,
+) -> Element {
     rsx! {
         div { class: "char-grid",
             for entry in entries {
@@ -24,6 +30,14 @@ pub fn CharGrid(entries: Vec<Summary>) -> Element {
                     class: "char-tile",
                     to: route_for(entry.glyph),
                     aria_label: "{entry.glyph}, {entry.pinyin}",
+                    onclick: {
+                        let glyph = entry.glyph;
+                        move |_| {
+                            if let Some(pick) = on_pick {
+                                pick.call(glyph);
+                            }
+                        }
+                    },
                     span { class: "char-tile-glyph", aria_hidden: "true", "{entry.glyph}" }
                     span { class: "char-tile-pinyin pinyin", "{entry.pinyin}" }
                 }

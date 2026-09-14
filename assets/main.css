@@ -420,6 +420,39 @@ p {
   height: 1.5rem;
 }
 
+/* Back: top-leading, a chevron and the name of where it leads. It sits in the
+ * page rather than the top bar, which carries the wordmark and — on a wide
+ * screen — the sections. The negative start margin pulls the chevron's own
+ * bearing out so the row reads flush with the gutter while the tap target keeps
+ * its 44px. */
+.backlink {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.0625rem;
+  min-height: var(--tap);
+  margin-inline-start: -0.5rem;
+  padding-inline: 0.25rem 0.75rem;
+  border-radius: var(--radius-pill);
+  color: var(--accent);
+  font-size: var(--text-body);
+  font-weight: 500;
+  transition: background var(--duration-fast) var(--ease), opacity var(--duration-fast) var(--ease);
+}
+
+.backlink:hover {
+  background: var(--accent-quiet);
+}
+
+.backlink:active {
+  opacity: 0.55;
+}
+
+.backlink svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
 /* ── Controls ──────────────────────────────────────────────────────────── */
 
 .btn {
@@ -462,6 +495,19 @@ p {
 
 .btn-accent:hover {
   background: var(--accent);
+  filter: brightness(1.06);
+}
+
+/* Accent-tinted rather than filled: iOS's middle weight, for the one button in a
+ * row that should be found first without shouting. */
+.btn-tinted {
+  background: var(--accent-quiet);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.btn-tinted:hover {
+  background: var(--accent-quiet);
   filter: brightness(1.06);
 }
 
