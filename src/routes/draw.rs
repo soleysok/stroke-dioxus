@@ -120,7 +120,7 @@ pub fn Draw() -> Element {
 
             p { class: "draw-scope",
                 "Matching compares what you drew against Make Me a Hanzi's stroke "
-                "medians — the same centrelines the stroke animation is drawn along. "
+                "medians — the same centerlines the stroke animation is drawn along. "
                 "It covers every character this app carries stroke data for, which is "
                 "all of HSK 1 to 7-9."
             }
