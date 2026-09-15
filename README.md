@@ -343,6 +343,10 @@ leads. A page with one parent names it — `HSK 1` from a lesson, `My Lists` fro
 and only the character page, which can be arrived at from anywhere, has to work out at
 runtime whether that is Draw, the previous page, or Browse.
 
+Copy a learner reads is American English: **Practice** is the spelling for both the noun
+and the verb, never Practise. Only text on screen is held to this — comments and the
+notes in this file are the code's own voice and read however they read.
+
 ---
 
 ## Roadmap: Parity With mssl-strok
