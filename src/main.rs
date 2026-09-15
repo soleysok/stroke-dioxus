@@ -5,19 +5,27 @@
 mod components;
 mod data;
 mod history;
+mod hsk;
 mod index;
+mod lists;
 mod recognize;
 mod routes;
 mod speech;
 mod storage;
+mod text;
 mod url;
 
 use dioxus::prelude::*;
 
 use components::shell::Shell;
 use routes::{
-    character::CharacterPage, draw::Draw, home::Home, hsk::Hsk, hsk::HskBand, lists::Lists,
-    not_found::NotFound, search::Search,
+    character::CharacterPage,
+    draw::Draw,
+    home::Home,
+    hsk::{Hsk, HskBand, HskLevel, HskUnitPage},
+    lists::{ListDetail, Lists},
+    not_found::NotFound,
+    search::Search,
 };
 
 /// Every route in the app.
@@ -44,11 +52,24 @@ enum Route {
         #[route("/hsk")]
         Hsk {},
 
-        #[route("/hsk/:band")]
+        // Ahead of the course routes on purpose: "band" is not a number, so a
+        // level cannot swallow it, and this keeps the two halves of the section
+        // — words and characters — from needing two different top-level paths.
+        #[route("/hsk/band/:band")]
         HskBand { band: u8 },
+
+        #[route("/hsk/:level")]
+        HskLevel { level: u8 },
+
+        // The unit segment is its position within the level: /hsk/1/07.
+        #[route("/hsk/:level/:unit")]
+        HskUnitPage { level: u8, unit: String },
 
         #[route("/lists")]
         Lists {},
+
+        #[route("/lists/:id")]
+        ListDetail { id: String },
 
         #[route("/:..segments")]
         NotFound { segments: Vec<String> },
@@ -67,6 +88,9 @@ fn App() -> Element {
     // Noted before anything can navigate, so a page can tell whether it was
     // arrived at from inside the app or opened cold.
     history::provide_entry();
+    // Reads the saved lists once, so a list imported on an HSK unit page is on
+    // /lists without a reload.
+    lists::provide();
 
     rsx! {
         document::Link { rel: "stylesheet", href: MAIN_CSS }

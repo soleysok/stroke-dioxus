@@ -33,10 +33,12 @@ rm -rf dist
 mkdir -p dist
 cp -R "${site}/." dist/
 
-# A missing wasm file, search index or handwriting template file still produces a
-# directory that looks plausible, and the failure only shows up in production as
-# a blank page or a pad that recognises nothing.
-for required in dist/index.html dist/data/index.json dist/data/strokes.bin; do
+# A missing wasm file, search index, handwriting template file or course level
+# still produces a directory that looks plausible, and the failure only shows up
+# in production as a blank page, a pad that recognises nothing, or an HSK level
+# that will not open.
+for required in dist/index.html dist/data/index.json dist/data/strokes.bin \
+  dist/data/hsk/index.json dist/data/hsk/level-{1,2,3,4,5,6}.json; do
   [ -f "${required}" ] || { echo "Missing ${required} in the build output." >&2; exit 1; }
 done
 if ! find dist -name '*.wasm' -print -quit | grep -q .; then
@@ -48,4 +50,5 @@ log "Done"
 printf '  %s\n' \
   "$(du -sh dist | cut -f1) total" \
   "$(find dist -name '*.wasm' -printf '%f — %s bytes\n')" \
-  "$(find dist/data/char -type f 2>/dev/null | wc -l) vendored character files"
+  "$(find dist/data/char -type f 2>/dev/null | wc -l) vendored character files" \
+  "$(du -sh dist/data/hsk 2>/dev/null | cut -f1) of HSK course units"

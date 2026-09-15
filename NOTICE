@@ -38,5 +38,18 @@ complete-hsk-vocabulary
 https://github.com/drkameleon/complete-hsk-vocabulary
 
 Source of the HSK 3.0 band and corpus frequency used to rank characters and to
-populate the HSK section. MIT licensed. Its meanings derive from CC-CEDICT
-(CC BY-SA 4.0).
+populate the HSK section, and — by way of the course files described below — of
+the vocabulary, pinyin and meanings in `public/data/hsk/level-*.json`. MIT
+licensed. Its meanings derive from CC-CEDICT (CC BY-SA 4.0).
+
+
+mssl-strok
+----------
+https://github.com/soleysok/mssl-strok
+
+Source of the HSK course *arrangement* in `public/data/hsk/level-*.json`: which
+words each unit teaches, in what order, under what title. `scripts/build-hsk-
+data.py` copies that repository's own committed course files and trims them to
+the fields this app renders, rather than deriving a second, slightly different
+course from the vocabulary list. Same authors, MIT licensed, and the words
+themselves carry the complete-hsk-vocabulary and CC-CEDICT terms above.

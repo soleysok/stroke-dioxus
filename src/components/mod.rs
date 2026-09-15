@@ -4,3 +4,4 @@ pub mod search_field;
 pub mod shell;
 pub mod stroke_pad;
 pub mod stroke_player;
+pub mod word_list;

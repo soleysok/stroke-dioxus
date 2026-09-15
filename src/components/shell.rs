@@ -87,11 +87,11 @@ fn Footer() -> Element {
                 "Stroke graphics and definitions from "
                 a { href: "https://github.com/skishore/makemeahanzi", "Make Me a Hanzi" }
                 " (LGPL / ARPHIC Public License), which draws its glosses from CC-CEDICT and Unihan. "
-                "HSK 3.0 bands from "
+                "HSK 3.0 bands and course vocabulary from "
                 a { href: "https://github.com/drkameleon/complete-hsk-vocabulary",
                     "complete-hsk-vocabulary"
                 }
-                " (MIT)."
+                " (MIT). The course units follow the React app's own arrangement of them."
             }
             p { "Built with Dioxus. A parallel rewrite of the React app at stroke-mssl.vercel.app." }
         }
